@@ -1,0 +1,94 @@
+baseURL = 'https://giacomoettorerocco.com/'
+languageCode = 'en-us'
+title = 'Giacomo Ettore Rocco'
+theme = 'PaperMod'
+
+[pagination]
+  pagerSize = 5
+
+[params]
+  author = 'Giacomo Ettore Rocco'
+  description = 'Personal website and project showcase'
+
+  # Profile mode for homepage
+  [params.profileMode]
+    enabled = true
+    title = "Giacomo Ettore Rocco"
+    subtitle = "Data Scientist | Machine Learning Engineer | Software Developer"
+    imageUrl = "/GiacomoEttoreRocco.jpeg"
+    imageTitle = "Giacomo Ettore Rocco"
+    imageWidth = 200
+    imageHeight = 200
+    [[params.profileMode.buttons]]
+      name = "About"
+      url = "/about"
+    [[params.profileMode.buttons]]
+      name = "CV"
+      url = "/cv"
+    # [[params.profileMode.buttons]]
+    #   name = "Projects"
+    #   url = "/projects"
+    # [[params.profileMode.buttons]]
+    #   name = "Blog"
+    #   url = "/blog"
+
+  # Social icons
+  [[params.socialIcons]]
+    name = "github"
+    url = "https://github.com/yourusername"
+  [[params.socialIcons]]
+    name = "linkedin"
+    url = "https://linkedin.com/in/yourusername"
+  [[params.socialIcons]]
+    name = "email"
+    url = "mailto:your.email@example.com"
+
+  # Theme settings
+  [params.homeInfoParams]
+    Title = "Hi there! 👋"
+    Content = "Welcome to my personal website"
+
+  ShowReadingTime = true
+  ShowShareButtons = true
+  ShowPostNavLinks = true
+  ShowBreadCrumbs = true
+  ShowCodeCopyButtons = true
+  ShowWordCount = true
+  ShowRssButtonInSectionTermList = true
+  UseHugoToc = true
+  disableSpecial1stPost = false
+  disableScrollToTop = false
+  comments = false
+  hidemeta = false
+  hideSummary = false
+  showtoc = true
+  tocopen = false
+
+[menu]
+  [[menu.main]]
+    name = 'About'
+    url = '/about/'
+    weight = 1
+  [[menu.main]]
+    name = 'CV'
+    url = '/cv/'
+    weight = 2
+  # [[menu.main]]
+  #   name = 'Projects'
+  #   url = '/projects/'
+  #   weight = 3
+  # [[menu.main]]
+  #   name = 'Blog'
+  #   url = '/blog/'
+  #   weight = 4
+  [[menu.main]]
+    name = 'Archive'
+    url = '/archives/'
+    weight = 5
+  [[menu.main]]
+    name = 'Search'
+    url = '/search/'
+    weight = 6
+
+[outputs]
+  home = ["HTML", "RSS", "JSON"]

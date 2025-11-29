@@ -1,0 +1,78 @@
+
+/* Widen the main content container */
+.main {
+    max-width: 1200px !important;
+}
+
+/* Custom CSS for organic blob/ink splash profile image */
+.profile img {
+    width: 200px !important;
+    height: 200px !important;
+    object-fit: cover !important;
+    border-radius: 67% 85% 25% 42% / 45% 72% 28% 55% !important;
+    clip-path: none !important;
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3) !important;
+    transition: transform 0.3s ease !important;
+}
+
+.profile img:hover {
+    transform: scale(1.05) !important;
+}
+
+/* Style buttons with modern look */
+.button {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    border: none !important;
+    box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3) !important;
+    transition: all 0.3s ease !important;
+}
+
+.button:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 15px rgba(102, 126, 234, 0.4) !important;
+}
+
+/* Content area styling */
+.post-content,
+.post-single {
+    background: white !important;
+    border-radius: 15px !important;
+    padding: 30px !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08) !important;
+}
+
+a:hover {
+    color: #764ba2 !important;
+}
+
+/* Apply organic blob style to images in content (like About page) */
+.post-content img {
+    max-width: 300px !important;
+    max-height: 300px !important;
+    object-fit: cover !important;
+    border-radius: 67% 85% 25% 42% / 45% 72% 28% 55% !important;
+    float: left !important;
+    margin: 0 30px 20px 0 !important;
+}
+
+/* Caption next to image when using img + em pattern */
+.post-content img + em {
+    display: block;
+    font-style: italic;
+    color: #666;
+    padding-top: 10px;
+}
+
+/* Clear float after the caption */
+.post-content img + em::after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+/* Ensure paragraphs after image+caption start below */
+.post-content p:has(+ img),
+.post-content img + em + p {
+    clear: both;
+}
