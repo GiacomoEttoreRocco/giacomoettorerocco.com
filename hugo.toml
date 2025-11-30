@@ -10,6 +10,8 @@ enableRobotsTXT = true
 [params]
   author = 'Giacomo Ettore Rocco'
   description = 'Personal website and project showcase'
+  defaultTheme = 'dark'
+  disableThemeToggle = true
 
   # Profile mode for homepage
   [params.profileMode]
