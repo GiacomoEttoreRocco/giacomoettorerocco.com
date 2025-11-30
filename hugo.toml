@@ -44,7 +44,7 @@ enableRobotsTXT = true
     url = "https://www.linkedin.com/in/giacomo-ettore-rocco-a56b01170/"
   [[params.socialIcons]]
     name = "email"
-    url = "giacomoettore.rocco@gmail.com"
+    url = "mailto:giacomoettore.rocco@gmail.com"
 
   # Theme settings
   [params.homeInfoParams]
