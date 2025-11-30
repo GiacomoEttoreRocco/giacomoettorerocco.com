@@ -74,3 +74,68 @@ a:hover {
 .post-content img + em + p {
     clear: both;
 }
+
+/* ============================================
+   MOBILE RESPONSIVE STYLES
+   ============================================ */
+
+/* Tablet and smaller devices */
+@media screen and (max-width: 768px) {
+    /* Reduce main container width on mobile */
+    .main {
+        max-width: 100% !important;
+        padding: 15px !important;
+    }
+
+    /* Stack images vertically on mobile instead of floating */
+    .post-content img {
+        float: none !important;
+        margin: 0 auto 20px auto !important;
+        display: block !important;
+        max-width: 250px !important;
+        max-height: 250px !important;
+    }
+
+    /* Center caption below image on mobile */
+    .post-content img + em {
+        text-align: center;
+        margin-bottom: 20px;
+        display: block;
+    }
+
+    /* Reduce padding on content areas for mobile */
+    .post-content,
+    .post-single {
+        padding: 20px !important;
+    }
+
+    /* Smaller profile image on mobile */
+    .profile img {
+        width: 150px !important;
+        height: 150px !important;
+    }
+}
+
+/* Very small mobile devices */
+@media screen and (max-width: 480px) {
+    /* Even more compact on very small screens */
+    .main {
+        padding: 10px !important;
+    }
+
+    .post-content,
+    .post-single {
+        padding: 15px !important;
+    }
+
+    /* Smaller images on very small screens */
+    .post-content img {
+        max-width: 200px !important;
+        max-height: 200px !important;
+    }
+
+    .profile img {
+        width: 120px !important;
+        height: 120px !important;
+    }
+}
