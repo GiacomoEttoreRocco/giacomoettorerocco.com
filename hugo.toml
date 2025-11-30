@@ -38,13 +38,13 @@ enableRobotsTXT = true
   # Social icons
   [[params.socialIcons]]
     name = "github"
-    url = "https://github.com/yourusername"
+    url = "https://github.com/GiacomoEttoreRocco"
   [[params.socialIcons]]
     name = "linkedin"
-    url = "https://linkedin.com/in/yourusername"
+    url = "https://www.linkedin.com/in/giacomo-ettore-rocco-a56b01170/"
   [[params.socialIcons]]
     name = "email"
-    url = "mailto:your.email@example.com"
+    url = "giacomoettore.rocco@gmail.com"
 
   # Theme settings
   [params.homeInfoParams]
