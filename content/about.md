@@ -9,7 +9,7 @@ draft: false
 I was born in Udine, Friuli Venezia Giulia, Italy! On April 29, 1995.
 
 ![Giacomo Ettore Rocco](/GER2.jpeg)
-*Photo taken during my walk along the Magna Via Francigena in Agrigento*
+*Photo taken during my walk along the Magna Via Francigena in Sicilia, here I was in Agrigento*
 
 I'm a data scientist with strong analytical and problem-solving skills developed in data-intensive environments. I specialize in machine learning and data visualization to support data-driven decision-making.
 
