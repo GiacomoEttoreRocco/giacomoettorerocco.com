@@ -198,35 +198,11 @@
 <script data-goatcounter="https://giacomoettorerocco.goatcounter.com/count"
         async src="//gc.zgo.at/count.js"></script>
 
-<div id="visitor-counter" style="position: fixed; top: 80px; right: 20px; background: rgba(0, 0, 0, 0.8); padding: 10px 15px; border-radius: 8px; font-size: 0.9em; z-index: 999; box-shadow: 0 2px 10px rgba(0,0,0,0.4); color: #fff; font-family: monospace; display: flex; align-items: center; gap: 8px;">
-  <span style="opacity: 0.8;">👁️ Visits:</span>
-  <span id="gc-count" style="font-weight: bold;">...</span>
+<div id="visitor-counter" style="position: fixed; top: 80px; right: 20px; background: rgba(0, 0, 0, 0.85); padding: 12px 18px; border-radius: 10px; font-size: 1.2em; z-index: 999; box-shadow: 0 2px 12px rgba(0,0,0,0.5); color: #fff; font-family: monospace; display: flex; align-items: center; gap: 10px;">
+  <span style="opacity: 0.9; font-size: 1.3em;">👁️</span>
+  <span style="font-weight: normal; opacity: 0.8;">Visits:</span>
+  <img src="https://giacomoettorerocco.goatcounter.com/counter/TOTAL.svg" alt="counter" style="height: 20px;">
 </div>
-<script>
-  (function() {
-    var img = new Image();
-    img.onload = function() {
-      
-      fetch('https://giacomoettorerocco.goatcounter.com/counter/TOTAL.svg')
-        .then(r => r.text())
-        .then(svg => {
-          var match = svg.match(/>(\d+)</);
-          if (match) {
-            document.getElementById('gc-count').textContent = match[1];
-          } else {
-            document.getElementById('gc-count').textContent = '4+';
-          }
-        })
-        .catch(() => {
-          document.getElementById('gc-count').textContent = '4+';
-        });
-    };
-    img.onerror = function() {
-      document.getElementById('gc-count').textContent = '4+';
-    };
-    img.src = 'https://giacomoettorerocco.goatcounter.com/counter/TOTAL.svg?' + Date.now();
-  })();
-</script>
 
 
 
