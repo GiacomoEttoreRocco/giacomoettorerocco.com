@@ -110,10 +110,20 @@
 <script data-goatcounter="https://giacomoettorerocco.goatcounter.com/count"
         async src="//gc.zgo.at/count.js"></script>
 
-<div style="position: fixed; top: 80px; right: 20px; background: rgba(0, 0, 0, 0.7); padding: 8px 12px; border-radius: 8px; font-size: 0.85em; z-index: 999; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
-  <span style="color: #fff;">👁️ </span>
-  <img src="https://giacomoettorerocco.goatcounter.com/counter/TOTAL.svg" alt="Visitor counter" style="vertical-align: middle;">
+<div id="visitor-counter" style="position: fixed; top: 80px; right: 20px; background: rgba(0, 0, 0, 0.8); padding: 10px 15px; border-radius: 8px; font-size: 0.9em; z-index: 999; box-shadow: 0 2px 10px rgba(0,0,0,0.4); color: #fff; font-family: monospace;">
+  <span style="opacity: 0.8;">👁️ Visits:</span>
+  <span id="visit-count" style="font-weight: bold; margin-left: 5px;">...</span>
 </div>
+<script>
+  fetch('https://giacomoettorerocco.goatcounter.com/counter/TOTAL.json')
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('visit-count').textContent = data.count || '0';
+    })
+    .catch(() => {
+      document.getElementById('visit-count').textContent = '---';
+    });
+</script>
 
 
 
