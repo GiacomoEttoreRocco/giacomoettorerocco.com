@@ -12,6 +12,9 @@ enableRobotsTXT = true
   description = 'Personal website and project showcase'
   defaultTheme = 'dark'
   disableThemeToggle = true
+  googleAnalyticsID = 'G-00YJHB8ZF2'
+  goatCounterCode = 'giacomoettorerocco'
+  showVisitorCount = true
 
   # Profile mode for homepage
   [params.profileMode]

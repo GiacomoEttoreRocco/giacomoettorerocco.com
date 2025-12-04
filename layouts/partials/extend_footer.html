@@ -1,0 +1,13 @@
+{{- /* GoatCounter Analytics */ -}}
+{{ with .Site.Params.goatCounterCode }}
+<script data-goatcounter="https://{{ . }}.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+{{ end }}
+
+{{- /* Visitor counter badge */ -}}
+{{ if .Site.Params.showVisitorCount }}
+<div style="text-align: center; margin-top: 20px; opacity: 0.7; font-size: 0.9em;">
+  <span>👁️ Total visits: </span>
+  <img src="https://giacomoettorerocco.goatcounter.com/counter/TOTAL.svg" alt="Visitor counter">
+</div>
+{{ end }}

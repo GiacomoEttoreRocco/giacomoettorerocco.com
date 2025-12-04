@@ -2,44 +2,44 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>http://localhost:1313/blog/</loc>
+    <loc>https://giacomoettorerocco.com/blog/</loc>
     <lastmod>2025-11-29T10:00:00+01:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/tags/blog/</loc>
+    <loc>https://giacomoettorerocco.com/tags/blog/</loc>
     <lastmod>2025-11-29T10:00:00+01:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/categories/</loc>
+    <loc>https://giacomoettorerocco.com/categories/</loc>
     <lastmod>2025-11-29T10:00:00+01:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/categories/general/</loc>
+    <loc>https://giacomoettorerocco.com/categories/general/</loc>
     <lastmod>2025-11-29T10:00:00+01:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/</loc>
+    <loc>https://giacomoettorerocco.com/</loc>
     <lastmod>2025-11-29T10:00:00+01:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/tags/introduction/</loc>
+    <loc>https://giacomoettorerocco.com/tags/introduction/</loc>
     <lastmod>2025-11-29T10:00:00+01:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/blog/my-first-post/</loc>
+    <loc>https://giacomoettorerocco.com/blog/my-first-post/</loc>
     <lastmod>2025-11-29T10:00:00+01:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/tags/</loc>
+    <loc>https://giacomoettorerocco.com/tags/</loc>
     <lastmod>2025-11-29T10:00:00+01:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/about/</loc>
+    <loc>https://giacomoettorerocco.com/about/</loc>
     <lastmod>2025-11-29T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/cv/</loc>
+    <loc>https://giacomoettorerocco.com/cv/</loc>
     <lastmod>2025-11-29T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/projects/project-1/</loc>
+    <loc>https://giacomoettorerocco.com/projects/project-1/</loc>
     <lastmod>2025-11-29T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/projects/</loc>
+    <loc>https://giacomoettorerocco.com/projects/</loc>
     <lastmod>2025-11-29T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/archives/</loc>
+    <loc>https://giacomoettorerocco.com/archives/</loc>
   </url><url>
-    <loc>http://localhost:1313/search/</loc>
+    <loc>https://giacomoettorerocco.com/search/</loc>
   </url>
 </urlset>
