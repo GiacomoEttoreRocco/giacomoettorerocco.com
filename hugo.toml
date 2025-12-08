@@ -20,7 +20,7 @@ enableRobotsTXT = true
   [params.profileMode]
     enabled = true
     title = "Giacomo Ettore Rocco"
-    subtitle = "Data Scientist | Machine Learning Engineer | Software Developer"
+    subtitle = "Game Developer | Data Scientist | Machine Learning Engineer | Software Developer"
     imageUrl = "/GiacomoEttoreRocco.jpeg"
     imageTitle = "Giacomo Ettore Rocco"
     imageWidth = 200
