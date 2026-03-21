@@ -151,8 +151,12 @@
   .zbg-legend-item {
     display: flex;
     align-items: center;
-    gap: 0.3rem;
-    font-size: 0.8rem;
+    gap: 0.5rem;
+    font-size: 1rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.05);
+    border-left: 4px solid transparent;
   }
   .zbg-legend-item img {
     width: 88px;
@@ -160,10 +164,7 @@
     object-fit: contain;
   }
   .zbg-legend-item .zbg-legend-color {
-    width: 14px;
-    height: 14px;
-    border-radius: 3px;
-    flex-shrink: 0;
+    display: none;
   }
 </style>
 
@@ -411,8 +412,7 @@
     el.innerHTML = names.map((name, i) => {
       const color = colors[i % colors.length];
       const imgUrl = imgFn(name);
-      return `<div class="zbg-legend-item">
-        <span class="zbg-legend-color" style="background:${color}"></span>
+      return `<div class="zbg-legend-item" style="border-left-color:${color}">
         <img src="${imgUrl}" alt="${name}" title="${name}">
         <span>${name}</span>
       </div>`;
