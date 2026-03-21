@@ -1,0 +1,251 @@
+{{ define "main" }}
+<style>
+  :root {
+    --bg-dark: #1a1d23;
+    --bg-card: #22262e;
+    --border-subtle: #2e3440;
+    --accent: #5cb85c;
+    --accent-hover: #4cae4c;
+    --text-primary: #e0e0e0;
+    --text-secondary: #a0a8b4;
+  }
+  [data-theme="dark"] {
+    --theme: var(--bg-dark);
+    --entry: var(--bg-card);
+    --border: var(--border-subtle);
+  }
+
+  .zbg-home {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 1rem 3rem;
+  }
+
+  /* Hero */
+  .zbg-hero {
+    text-align: center;
+    padding: 2rem 0 1.5rem;
+  }
+  .zbg-hero h1 {
+    font-size: 3.5rem;
+    font-weight: 400;
+    margin-bottom: 0.8rem;
+    line-height: 1.2;
+  }
+  .zbg-title-zero {
+    font-family: 'BespokeStencil', serif;
+    font-weight: 800;
+    color: #e0e0e0;
+  }
+  .zbg-title-bugs {
+    font-family: 'Nosifer', cursive;
+    font-weight: 400;
+    color: #a500e2;
+    font-style: italic;
+  }
+  .zbg-title-given {
+    font-family: 'Technor', sans-serif;
+    font-weight: 700;
+    font-style: italic;
+    color: #e0e0e0;
+  }
+  .zbg-hero .zbg-tagline {
+    font-family: 'Technor', sans-serif;
+    font-weight: 400;
+    font-size: 1.15rem;
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+  }
+
+  /* CTA buttons */
+  .zbg-cta {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 2.5rem;
+  }
+  .zbg-cta a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.8rem 1.6rem;
+    border-radius: 8px;
+    font-family: 'Technor', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .zbg-cta a:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  }
+  .zbg-btn-steam {
+    background: #1b2838;
+    color: #c7d5e0 !important;
+    border: 1px solid #2a475e;
+  }
+  .zbg-btn-discord {
+    background: #5865f2;
+    color: #fff !important;
+    border: 1px solid #4752c4;
+  }
+  .zbg-btn-analytics {
+    background: var(--bg-card);
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-subtle);
+  }
+
+  /* Trailer */
+  .zbg-trailer {
+    margin-bottom: 2.5rem;
+  }
+  .zbg-trailer .zbg-video-wrap {
+    position: relative;
+    padding-bottom: 56.25%;
+    height: 0;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+  }
+  .zbg-trailer .zbg-video-wrap iframe {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    border: 0;
+  }
+
+  /* Features */
+  .zbg-features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.2rem;
+    margin-bottom: 2.5rem;
+  }
+  .zbg-feature {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    padding: 1.5rem;
+    text-align: center;
+  }
+  .zbg-feature .zbg-feat-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    display: block;
+  }
+  .zbg-feature h3 {
+    font-family: 'Technor', sans-serif;
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 0.4rem;
+  }
+  .zbg-feature p {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin: 0;
+  }
+
+  /* About section */
+  .zbg-description {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    padding: 2rem;
+    margin-bottom: 2.5rem;
+    line-height: 1.7;
+    color: var(--text-secondary);
+    font-size: 1rem;
+  }
+  .zbg-description h2 {
+    font-family: 'Technor', sans-serif;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-top: 0;
+    margin-bottom: 1rem;
+  }
+
+  /* Screenshots placeholder */
+  .zbg-screenshots {
+    margin-bottom: 2.5rem;
+  }
+  .zbg-screenshots h2 {
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+  .zbg-screenshots-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+  }
+  .zbg-screenshots-grid img {
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid var(--border-subtle);
+  }
+</style>
+
+<div class="zbg-home">
+  <!-- Hero -->
+  <div class="zbg-hero">
+    <h1><span class="zbg-title-zero">ZERO </span><span class="zbg-title-bugs">BUGS </span><span class="zbg-title-given">GIVEN.</span></h1>
+    <p class="zbg-tagline">A roguelite tower defense on a procedurally generated hexagonal world</p>
+  </div>
+
+  <!-- CTA -->
+  <div class="zbg-cta">
+    <a href="https://store.steampowered.com/app/4443770/Zero_Bugs_Given/" class="zbg-btn-steam" target="_blank" rel="noopener">
+      Wishlist on Steam
+    </a>
+    <a href="https://discord.gg/vuCdDeYmCQ" class="zbg-btn-discord" target="_blank" rel="noopener">
+      Join Discord
+    </a>
+    <a href="/zerobugsgiven/" class="zbg-btn-analytics">
+      Analytics Dashboard
+    </a>
+  </div>
+
+  <!-- Trailer -->
+  <div class="zbg-trailer">
+    <div class="zbg-video-wrap">
+      <iframe src="https://www.youtube.com/embed/9ZNydwCaM7Y" title="Zero Bugs Given Trailer" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </div>
+  </div>
+
+  <!-- Features -->
+  <div class="zbg-features">
+    <div class="zbg-feature">
+      <span class="zbg-feat-icon">&#x2B22;</span>
+      <h3>Hexagonal Grid</h3>
+      <p>Procedurally generated maps with hex-based pathfinding</p>
+    </div>
+    <div class="zbg-feature">
+      <span class="zbg-feat-icon">&#x1F3F0;</span>
+      <h3>7 Turret Types</h3>
+      <p>From Shooters to Electro chains, each with unique mechanics</p>
+    </div>
+    <div class="zbg-feature">
+      <span class="zbg-feat-icon">&#x2694;</span>
+      <h3>19 Enemy Types</h3>
+      <p>Bugs, wasps, frogs, and bosses with distinct abilities</p>
+    </div>
+    <div class="zbg-feature">
+      <span class="zbg-feat-icon">&#x1F3B2;</span>
+      <h3>Roguelite Choices</h3>
+      <p>Pick bonuses and maluses that shape every run</p>
+    </div>
+  </div>
+
+  <!-- Description -->
+  <div class="zbg-description">
+    <h2>About the Game</h2>
+    <p>
+      Zero Bugs Given is a tower defense game where no two runs are the same. Build your defenses on a procedurally generated hexagonal map, choose your strategy through a risk-reward system of bonuses and maluses, and face increasingly challenging waves of enemies.
+    </p>
+    <p>
+      Every decision matters: which turrets to place, which bonuses to pick, and which maluses to accept. Adapt your strategy on the fly as the map and enemy composition change with each playthrough.
+    </p>
+  </div>
+</div>
+{{ end }}

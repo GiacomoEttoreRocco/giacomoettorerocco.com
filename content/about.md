@@ -1,12 +1,10 @@
 ---
-title: "About Me"
+title: "About the Creator"
 date: 2025-11-29
 draft: false
 ---
 
 # Hi, I'm Giacomo Ettore Rocco
-
-I was born in Udine, Friuli Venezia Giulia, Italy, on April 29, 1995.
 
 ![Giacomo Ettore Rocco](/GER2.jpeg)
 *Photo taken during my walk along the Magna Via Francigena in Sicily — here I was in Agrigento.*
@@ -34,7 +32,11 @@ I focus on turning complex data into clear, actionable insights. My work blends 
 
 My goal is to combine my expertise in data science with my passion for video games and app development — ideally building a career at the intersection of data analytics, game development, and software engineering.
 
-I enjoy programming video games and developing web applications, as well as exploring new AI and ML technologies—especially those related to game development.
+## Links
+
+- [Curriculum Vitae](/cv/)
+- [GitHub](https://github.com/GiacomoEttoreRocco)
+- [LinkedIn](https://www.linkedin.com/in/giacomo-ettore-rocco-a56b01170/)
 
 ## Get in Touch
 

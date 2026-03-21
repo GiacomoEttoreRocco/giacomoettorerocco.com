@@ -6,10 +6,31 @@
     padding: 0 1rem 3rem;
   }
   .zbg-dashboard h1 {
+    font-size: 2.5rem;
+    font-weight: 400;
     text-align: center;
     margin-bottom: 0.3rem;
+    line-height: 1.2;
+  }
+  .zbg-title-zero {
+    font-family: 'BespokeStencil', serif;
+    font-weight: 800;
+    color: #e0e0e0;
+  }
+  .zbg-title-bugs {
+    font-family: 'Nosifer', cursive;
+    font-weight: 400;
+    color: #a500e2;
+    font-style: italic;
+  }
+  .zbg-title-given {
+    font-family: 'Technor', sans-serif;
+    font-weight: 700;
+    font-style: italic;
+    color: #e0e0e0;
   }
   .zbg-subtitle {
+    font-family: 'Technor', sans-serif;
     text-align: center;
     opacity: 0.6;
     margin-bottom: 2rem;
@@ -30,12 +51,14 @@
     border: 1px solid var(--border);
   }
   .zbg-card .zbg-value {
+    font-family: 'Technor', sans-serif;
     font-size: 2rem;
     font-weight: 700;
     display: block;
     margin-bottom: 0.2rem;
   }
   .zbg-card .zbg-label {
+    font-family: 'Technor', sans-serif;
     font-size: 0.85rem;
     opacity: 0.7;
   }
@@ -45,6 +68,8 @@
     margin-bottom: 2.5rem;
   }
   .zbg-chart-section h2 {
+    font-family: 'Technor', sans-serif;
+    font-weight: 600;
     font-size: 1.2rem;
     margin-bottom: 0.8rem;
     border-bottom: 1px solid var(--border);
@@ -101,8 +126,8 @@
     font-size: 0.8rem;
   }
   .zbg-legend-item img {
-    width: 48px;
-    height: 48px;
+    width: 88px;
+    height: 88px;
     object-fit: contain;
   }
   .zbg-legend-item .zbg-legend-color {
@@ -114,7 +139,7 @@
 </style>
 
 <div class="zbg-dashboard">
-  <h1>Zero Bugs Given</h1>
+  <h1><span class="zbg-title-zero">ZERO </span><span class="zbg-title-bugs">BUGS </span><span class="zbg-title-given">GIVEN.</span></h1>
   <p class="zbg-subtitle">Analytics Dashboard</p>
 
   <div id="zbg-loading" class="zbg-loading">Loading data...</div>
@@ -201,6 +226,17 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script>
 (function() {
+  // Global Chart.js defaults for dark theme
+  Chart.defaults.color = '#e0e0e0';
+  Chart.defaults.borderColor = 'rgba(255,255,255,0.1)';
+  Chart.defaults.font.size = 20;
+  Chart.defaults.plugins.legend.labels.color = '#e0e0e0';
+  Chart.defaults.plugins.legend.labels.font = { size: 20 };
+  Chart.defaults.scale.ticks.color = '#c8cdd3';
+  Chart.defaults.scale.ticks.font = { size: 18 };
+  Chart.defaults.scale.title.color = '#c8cdd3';
+  Chart.defaults.scale.title.font = { size: 20, weight: 'bold' };
+  Chart.defaults.scale.grid = { color: 'rgba(255,255,255,0.08)' };
   const SUPABASE_URL = 'https://qoyyfnrhllhwlvbsshjb.supabase.co/rest/v1/';
   const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFveXlmbnJobGxod2x2YnNzaGpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwNzMwMTgsImV4cCI6MjA4OTY0OTAxOH0.6pXVi1sw2LoQFEkAHptEmp_hNxKCSld_G0APaEb7YmI';
 
@@ -248,7 +284,7 @@
       const ctx = chart.ctx;
       const yAxis = chart.scales.y;
       const labels = chart.data.labels;
-      const imgSize = 48;
+      const imgSize = 88;
 
       labels.forEach((label, i) => {
         const y = yAxis.getPixelForTick(i);
@@ -354,7 +390,7 @@
   function hBarOpts(xTitle, imgType) {
     return {
       indexAxis: 'y',
-      layout: { padding: { left: 56 } },
+      layout: { padding: { left: 96 } },
       plugins: {
         legend: { display: false },
         imageAxisLabels: { type: imgType }

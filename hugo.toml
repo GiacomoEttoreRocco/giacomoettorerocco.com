@@ -1,6 +1,6 @@
 baseURL = 'https://giacomoettorerocco.com/'
 languageCode = 'en-us'
-title = 'Giacomo Ettore Rocco'
+title = 'Zero Bugs Given'
 theme = 'PaperMod'
 enableRobotsTXT = true
 
@@ -9,92 +9,42 @@ enableRobotsTXT = true
 
 [params]
   author = 'Giacomo Ettore Rocco'
-  description = 'Personal website and project showcase'
+  description = 'Zero Bugs Given — A roguelite tower defense game'
   defaultTheme = 'dark'
   disableThemeToggle = true
   googleAnalyticsID = 'G-00YJHB8ZF2'
   goatCounterCode = 'giacomoettorerocco'
   showVisitorCount = true
 
-  # Profile mode for homepage
-  [params.profileMode]
-    enabled = true
-    title = "Giacomo Ettore Rocco"
-    subtitle = "Game Developer | Data Scientist | Machine Learning Engineer | Software Developer"
-    imageUrl = "/GiacomoEttoreRocco.jpeg"
-    imageTitle = "Giacomo Ettore Rocco"
-    imageWidth = 200
-    imageHeight = 200
-    [[params.profileMode.buttons]]
-      name = "About"
-      url = "/about"
-    [[params.profileMode.buttons]]
-      name = "CV"
-      url = "/cv"
-    # [[params.profileMode.buttons]]
-    #   name = "Projects"
-    #   url = "/projects"
-    # [[params.profileMode.buttons]]
-    #   name = "Blog"
-    #   url = "/blog"
-
-  # Social icons
-  [[params.socialIcons]]
-    name = "github"
-    url = "https://github.com/GiacomoEttoreRocco"
-  [[params.socialIcons]]
-    name = "linkedin"
-    url = "https://www.linkedin.com/in/giacomo-ettore-rocco-a56b01170/"
-  [[params.socialIcons]]
-    name = "email"
-    url = "mailto:giacomoettore.rocco@gmail.com"
-
-  # Theme settings
-  [params.homeInfoParams]
-    Title = "Hi there! 👋"
-    Content = "Welcome to my personal website"
-
-  ShowReadingTime = true
-  ShowShareButtons = true
-  ShowPostNavLinks = true
-  ShowBreadCrumbs = true
-  ShowCodeCopyButtons = true
-  ShowWordCount = true
-  ShowRssButtonInSectionTermList = true
-  UseHugoToc = true
-  disableSpecial1stPost = false
+  ShowReadingTime = false
+  ShowShareButtons = false
+  ShowPostNavLinks = false
+  ShowBreadCrumbs = false
+  ShowCodeCopyButtons = false
+  ShowWordCount = false
+  ShowRssButtonInSectionTermList = false
+  UseHugoToc = false
+  disableSpecial1stPost = true
   disableScrollToTop = false
   comments = false
-  hidemeta = false
+  hidemeta = true
   hideSummary = false
-  showtoc = true
+  showtoc = false
   tocopen = false
 
 [menu]
   [[menu.main]]
-    name = 'About'
-    url = '/about/'
+    name = 'Home'
+    url = '/'
     weight = 1
   [[menu.main]]
-    name = 'CV'
-    url = '/cv/'
+    name = 'Analytics'
+    url = '/zerobugsgiven/'
     weight = 2
   [[menu.main]]
-    name = 'Games'
-    url = '/projects/'
+    name = 'About'
+    url = '/about/'
     weight = 3
-  # [[menu.main]]
-  #   name = 'Blog'
-  #   url = '/blog/'
-  #   weight = 4
-  [[menu.main]]
-    name = 'Archive'
-    url = '/archives/'
-    weight = 5
-  [[menu.main]]
-    name = 'Search'
-    url = '/search/'
-    weight = 6
 
 [outputs]
   home = ["HTML", "RSS", "JSON"]

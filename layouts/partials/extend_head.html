@@ -8,3 +8,71 @@
   gtag('config', '{{ . }}');
 </script>
 {{ end }}
+
+<!-- Fonts & softer dark theme -->
+<style>
+  @font-face {
+    font-family: 'Nosifer';
+    src: url('/fonts/NosiferCaps-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'BespokeStencil';
+    src: url('/fonts/BespokeStencil-Variable.woff2') format('woff2');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'Technor';
+    src: url('/fonts/Technor-Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'Technor';
+    src: url('/fonts/Technor-Semibold.woff2') format('woff2');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'Technor';
+    src: url('/fonts/Technor-Bold.woff2') format('woff2');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+  }
+</style>
+<style>
+  :root {
+    --gap: 24px;
+    --content-gap: 20px;
+    --nav-width: 1024px;
+    --main-width: 900px;
+    --header-height: 60px;
+    --footer-height: 60px;
+    --radius: 8px;
+  }
+  [data-theme="dark"] {
+    --theme: #1a1d23;
+    --entry: #22262e;
+    --primary: #e0e0e0;
+    --secondary: #a0a8b4;
+    --tertiary: #2e3440;
+    --border: #2e3440;
+    --content: #c8cdd3;
+    --hljs-bg: #22262e;
+    --code-bg: #22262e;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  }
+  .nav {
+    background: #1e2128;
+    border-bottom: 1px solid #2e3440;
+  }
+</style>
