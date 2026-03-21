@@ -1,0 +1,429 @@
+{{ define "main" }}
+<style>
+  .zbg-dashboard {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 1rem 3rem;
+  }
+  .zbg-dashboard h1 {
+    text-align: center;
+    margin-bottom: 0.3rem;
+  }
+  .zbg-subtitle {
+    text-align: center;
+    opacity: 0.6;
+    margin-bottom: 2rem;
+  }
+
+  /* Summary cards */
+  .zbg-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+  }
+  .zbg-card {
+    background: var(--entry);
+    border-radius: 10px;
+    padding: 1.2rem;
+    text-align: center;
+    border: 1px solid var(--border);
+  }
+  .zbg-card .zbg-value {
+    font-size: 2rem;
+    font-weight: 700;
+    display: block;
+    margin-bottom: 0.2rem;
+  }
+  .zbg-card .zbg-label {
+    font-size: 0.85rem;
+    opacity: 0.7;
+  }
+
+  /* Charts */
+  .zbg-chart-section {
+    margin-bottom: 2.5rem;
+  }
+  .zbg-chart-section h2 {
+    font-size: 1.2rem;
+    margin-bottom: 0.8rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.4rem;
+  }
+  .zbg-chart-wrap {
+    position: relative;
+    width: 100%;
+  }
+  .zbg-chart-wrap canvas {
+    width: 100% !important;
+  }
+
+  /* Filters */
+  .zbg-filters {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .zbg-filters label {
+    font-size: 0.85rem;
+    opacity: 0.7;
+  }
+  .zbg-filters select, .zbg-filters input {
+    background: var(--entry);
+    color: var(--primary);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.4rem 0.6rem;
+    font-size: 0.9rem;
+  }
+
+  .zbg-loading {
+    text-align: center;
+    padding: 4rem 0;
+    font-size: 1.2rem;
+    opacity: 0.6;
+  }
+</style>
+
+<div class="zbg-dashboard">
+  <h1>Zero Bugs Given</h1>
+  <p class="zbg-subtitle">Analytics Dashboard</p>
+
+  <div id="zbg-loading" class="zbg-loading">Loading data...</div>
+
+  <div id="zbg-content" style="display:none;">
+    <!-- Filters -->
+    <div class="zbg-filters">
+      <div>
+        <label>Last N sessions:</label>
+        <input type="number" id="zbg-filter-last" min="0" value="0" style="width:70px;" title="0 = all">
+      </div>
+      <div>
+        <label>Result:</label>
+        <select id="zbg-filter-result">
+          <option value="all">All</option>
+          <option value="defeats">Defeats only</option>
+          <option value="victories">Victories only</option>
+        </select>
+      </div>
+      <button id="zbg-filter-btn" style="padding:0.4rem 1rem; border-radius:6px; background:var(--entry); border:1px solid var(--border); color:var(--primary); cursor:pointer;">Apply</button>
+    </div>
+
+    <!-- Summary -->
+    <div class="zbg-summary">
+      <div class="zbg-card"><span class="zbg-value" id="zbg-total">-</span><span class="zbg-label">Sessions</span></div>
+      <div class="zbg-card"><span class="zbg-value" id="zbg-winrate">-</span><span class="zbg-label">Win Rate</span></div>
+      <div class="zbg-card"><span class="zbg-value" id="zbg-avgdeath">-</span><span class="zbg-label">Avg Death Wave</span></div>
+      <div class="zbg-card"><span class="zbg-value" id="zbg-avgduration">-</span><span class="zbg-label">Avg Duration</span></div>
+      <div class="zbg-card"><span class="zbg-value" id="zbg-leakrate">-</span><span class="zbg-label">Leak Rate</span></div>
+      <div class="zbg-card"><span class="zbg-value" id="zbg-skiprate">-</span><span class="zbg-label">Choice Skip Rate</span></div>
+    </div>
+
+    <!-- Charts -->
+    <div class="zbg-chart-section">
+      <h2>1. Death Wave Distribution</h2>
+      <div class="zbg-chart-wrap"><canvas id="chart-death"></canvas></div>
+    </div>
+
+    <div class="zbg-chart-section">
+      <h2>2. Integrity Curve</h2>
+      <div class="zbg-chart-wrap"><canvas id="chart-integrity"></canvas></div>
+    </div>
+
+    <div class="zbg-chart-section">
+      <h2>3a. Leaks by Enemy Type (count)</h2>
+      <div class="zbg-chart-wrap"><canvas id="chart-leak-count"></canvas></div>
+    </div>
+
+    <div class="zbg-chart-section">
+      <h2>3b. Integrity Damage by Enemy Type</h2>
+      <div class="zbg-chart-wrap"><canvas id="chart-leak-integrity"></canvas></div>
+    </div>
+
+    <div class="zbg-chart-section">
+      <h2>4. Damage by Turret Type</h2>
+      <div class="zbg-chart-wrap"><canvas id="chart-dps"></canvas></div>
+    </div>
+
+    <div class="zbg-chart-section">
+      <h2>5. Bonus Pick Count</h2>
+      <div class="zbg-chart-wrap"><canvas id="chart-bonus"></canvas></div>
+    </div>
+
+    <div class="zbg-chart-section">
+      <h2>6. Economy per Wave</h2>
+      <div class="zbg-chart-wrap"><canvas id="chart-economy"></canvas></div>
+    </div>
+
+    <div class="zbg-chart-section">
+      <h2>7. Turret Composition per Wave</h2>
+      <div class="zbg-chart-wrap"><canvas id="chart-turrets"></canvas></div>
+    </div>
+
+    <div class="zbg-chart-section">
+      <h2>8. Malus Pick Count</h2>
+      <div class="zbg-chart-wrap"><canvas id="chart-malus"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script>
+(function() {
+  const SUPABASE_URL = 'https://qoyyfnrhllhwlvbsshjb.supabase.co/rest/v1/';
+  const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFveXlmbnJobGxod2x2YnNzaGpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwNzMwMTgsImV4cCI6MjA4OTY0OTAxOH0.6pXVi1sw2LoQFEkAHptEmp_hNxKCSld_G0APaEb7YmI';
+
+  const COLORS = {
+    red: '#e74c3c', green: '#2ecc71', orange: '#e67e22', blue: '#3498db',
+    purple: '#9b59b6', yellow: '#f39c12', darkRed: '#c0392b', teal: '#1abc9c',
+    pink: '#e91e63', indigo: '#3f51b5', lime: '#8bc34a', amber: '#ff9800',
+  };
+  const PALETTE = Object.values(COLORS);
+
+  let allSessions = [];
+  let allWaves = [];
+  let charts = {};
+
+  async function fetchData(table, query) {
+    const res = await fetch(SUPABASE_URL + table + '?select=*' + (query || ''), {
+      headers: { 'apikey': ANON_KEY, 'Authorization': 'Bearer ' + ANON_KEY }
+    });
+    return res.json();
+  }
+
+  async function loadAll() {
+    const [sessions, waves] = await Promise.all([
+      fetchData('sessions', '&order=created_at.asc'),
+      fetchData('wave_snapshots', '&order=session_id.asc,wave.asc')
+    ]);
+    allSessions = sessions;
+    allWaves = waves;
+    applyFilters();
+    document.getElementById('zbg-loading').style.display = 'none';
+    document.getElementById('zbg-content').style.display = 'block';
+  }
+
+  function kvpSum(arr) {
+    const m = {};
+    if (!arr) return m;
+    for (const p of arr) { m[p.key] = (m[p.key] || 0) + p.value; }
+    return m;
+  }
+
+  function applyFilters() {
+    let sessions = [...allSessions];
+    const resultFilter = document.getElementById('zbg-filter-result').value;
+    if (resultFilter === 'defeats') sessions = sessions.filter(s => !s.victory);
+    else if (resultFilter === 'victories') sessions = sessions.filter(s => s.victory);
+
+    const lastN = parseInt(document.getElementById('zbg-filter-last').value) || 0;
+    if (lastN > 0) sessions = sessions.slice(-lastN);
+
+    const sessionIds = new Set(sessions.map(s => s.session_id));
+    const waves = allWaves.filter(w => sessionIds.has(w.session_id));
+
+    renderSummary(sessions, waves);
+    renderCharts(sessions, waves);
+  }
+
+  function renderSummary(sessions, waves) {
+    const n = sessions.length;
+    const wins = sessions.filter(s => s.victory).length;
+    const defeats = sessions.filter(s => !s.victory);
+
+    document.getElementById('zbg-total').textContent = n;
+    document.getElementById('zbg-winrate').textContent = n > 0 ? Math.round(wins / n * 100) + '%' : '-';
+    document.getElementById('zbg-avgdeath').textContent = defeats.length > 0
+      ? (defeats.reduce((a, s) => a + s.final_wave, 0) / defeats.length).toFixed(1) : '-';
+    document.getElementById('zbg-avgduration').textContent = n > 0
+      ? (sessions.reduce((a, s) => a + s.total_duration, 0) / n / 60).toFixed(1) + 'm' : '-';
+
+    let totalSpawned = 0, totalLeaked = 0, skippedCount = 0, choiceCount = 0;
+    for (const w of waves) {
+      const sp = w.spawned || [];
+      const lk = w.leaked || [];
+      totalSpawned += sp.reduce((a, p) => a + p.value, 0);
+      totalLeaked += lk.reduce((a, p) => a + p.value, 0);
+      if (w.chosen_bonus_id || w.skipped) { choiceCount++; if (w.skipped) skippedCount++; }
+    }
+    document.getElementById('zbg-leakrate').textContent = totalSpawned > 0
+      ? (totalLeaked / totalSpawned * 100).toFixed(1) + '%' : '-';
+    document.getElementById('zbg-skiprate').textContent = choiceCount > 0
+      ? (skippedCount / choiceCount * 100).toFixed(1) + '%' : '-';
+  }
+
+  function destroyCharts() {
+    for (const c of Object.values(charts)) c.destroy();
+    charts = {};
+  }
+
+  function renderCharts(sessions, waves) {
+    destroyCharts();
+
+    // 1. Death wave histogram
+    const defeats = sessions.filter(s => !s.victory);
+    if (defeats.length > 0) {
+      const maxWave = Math.max(...defeats.map(s => s.final_wave));
+      const bins = new Array(maxWave + 1).fill(0);
+      for (const s of defeats) bins[s.final_wave]++;
+      charts.death = new Chart(document.getElementById('chart-death'), {
+        type: 'bar',
+        data: { labels: bins.map((_, i) => i), datasets: [{ label: 'Deaths', data: bins, backgroundColor: COLORS.red + 'cc', borderColor: COLORS.red, borderWidth: 1 }] },
+        options: { plugins: { legend: { display: false } }, scales: { x: { title: { display: true, text: 'Wave' } }, y: { title: { display: true, text: 'Sessions' }, beginAtZero: true, ticks: { stepSize: 1 } } } }
+      });
+    }
+
+    // 2. Integrity curve
+    const waveIntegrity = {};
+    const waveCounts = {};
+    for (const w of waves) {
+      waveIntegrity[w.wave] = (waveIntegrity[w.wave] || 0) + w.integrity_remaining;
+      waveCounts[w.wave] = (waveCounts[w.wave] || 0) + 1;
+    }
+    const waveNums = Object.keys(waveIntegrity).map(Number).sort((a, b) => a - b);
+    if (waveNums.length > 0) {
+      charts.integrity = new Chart(document.getElementById('chart-integrity'), {
+        type: 'line',
+        data: { labels: waveNums, datasets: [{ label: 'Avg Integrity', data: waveNums.map(w => waveIntegrity[w] / waveCounts[w]), borderColor: COLORS.green, backgroundColor: COLORS.green + '33', fill: true, tension: 0.3 }] },
+        options: { plugins: { legend: { display: false } }, scales: { x: { title: { display: true, text: 'Wave' } }, y: { title: { display: true, text: 'Integrity' }, beginAtZero: true } } }
+      });
+    }
+
+    // 3a. Leak count by enemy
+    const leakCount = {};
+    for (const w of waves) for (const p of (w.leaked || [])) leakCount[p.key] = (leakCount[p.key] || 0) + p.value;
+    const leakEntries = Object.entries(leakCount).filter(([, v]) => v > 0).sort((a, b) => a[1] - b[1]);
+    if (leakEntries.length > 0) {
+      charts.leakCount = new Chart(document.getElementById('chart-leak-count'), {
+        type: 'bar',
+        data: { labels: leakEntries.map(e => e[0]), datasets: [{ label: 'Leaks', data: leakEntries.map(e => e[1]), backgroundColor: COLORS.orange + 'cc', borderColor: COLORS.orange, borderWidth: 1 }] },
+        options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { title: { display: true, text: 'Total Leaks' }, beginAtZero: true } } }
+      });
+    }
+
+    // 3b. Integrity damage by enemy
+    const leakInteg = {};
+    for (const w of waves) for (const p of (w.leaked_integrity || [])) leakInteg[p.key] = (leakInteg[p.key] || 0) + p.value;
+    const integEntries = Object.entries(leakInteg).filter(([, v]) => v > 0).sort((a, b) => a[1] - b[1]);
+    if (integEntries.length > 0) {
+      charts.leakInteg = new Chart(document.getElementById('chart-leak-integrity'), {
+        type: 'bar',
+        data: { labels: integEntries.map(e => e[0]), datasets: [{ label: 'Integrity Removed', data: integEntries.map(e => e[1]), backgroundColor: COLORS.darkRed + 'cc', borderColor: COLORS.darkRed, borderWidth: 1 }] },
+        options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { title: { display: true, text: 'Total Integrity Removed' }, beginAtZero: true } } }
+      });
+    }
+
+    // 4. Damage by turret type per wave
+    const turretDmg = {};
+    for (const w of waves) {
+      for (const p of (w.damage_by_turret || [])) {
+        if (!turretDmg[p.key]) turretDmg[p.key] = {};
+        turretDmg[p.key][w.wave] = (turretDmg[p.key][w.wave] || 0) + p.value;
+      }
+    }
+    const dmgTurretNames = Object.keys(turretDmg);
+    if (dmgTurretNames.length > 0) {
+      const dmgDatasets = dmgTurretNames.map((name, i) => ({
+        label: name,
+        data: waveNums.map(w => {
+          const total = turretDmg[name][w] || 0;
+          const count = waveCounts[w] || 1;
+          return total / count;
+        }),
+        borderColor: PALETTE[i % PALETTE.length],
+        tension: 0.3,
+        fill: false,
+      }));
+      charts.dps = new Chart(document.getElementById('chart-dps'), {
+        type: 'line',
+        data: { labels: waveNums, datasets: dmgDatasets },
+        options: { scales: { x: { title: { display: true, text: 'Wave' } }, y: { title: { display: true, text: 'Avg Damage' }, beginAtZero: true } } }
+      });
+    }
+
+    // 5. Bonus pick count
+    const bonusPicks = {};
+    for (const w of waves) if (w.chosen_bonus_id) bonusPicks[w.chosen_bonus_id] = (bonusPicks[w.chosen_bonus_id] || 0) + 1;
+    const bonusEntries = Object.entries(bonusPicks).sort((a, b) => a[1] - b[1]);
+    if (bonusEntries.length > 0) {
+      charts.bonus = new Chart(document.getElementById('chart-bonus'), {
+        type: 'bar',
+        data: { labels: bonusEntries.map(e => e[0]), datasets: [{ label: 'Picked', data: bonusEntries.map(e => e[1]), backgroundColor: COLORS.blue + 'cc', borderColor: COLORS.blue, borderWidth: 1 }] },
+        options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { title: { display: true, text: 'Times Picked' }, beginAtZero: true, ticks: { stepSize: 1 } } } }
+      });
+    }
+
+    // 6. Economy per wave
+    if (waveNums.length > 0) {
+      const avgEarned = {}, avgBalance = {};
+      for (const w of waves) {
+        avgEarned[w.wave] = (avgEarned[w.wave] || 0) + w.junk_earned;
+        avgBalance[w.wave] = (avgBalance[w.wave] || 0) + w.junk_balance;
+      }
+      charts.economy = new Chart(document.getElementById('chart-economy'), {
+        type: 'bar',
+        data: {
+          labels: waveNums,
+          datasets: [
+            { label: 'Junk Earned (avg)', data: waveNums.map(w => (avgEarned[w] || 0) / (waveCounts[w] || 1)), backgroundColor: COLORS.purple + '99', borderColor: COLORS.purple, borderWidth: 1, yAxisID: 'y' },
+            { label: 'Balance (avg)', data: waveNums.map(w => (avgBalance[w] || 0) / (waveCounts[w] || 1)), type: 'line', borderColor: COLORS.yellow, backgroundColor: 'transparent', yAxisID: 'y1', tension: 0.3, pointRadius: 4 },
+          ]
+        },
+        options: {
+          scales: {
+            x: { title: { display: true, text: 'Wave' } },
+            y: { position: 'left', title: { display: true, text: 'Junk Earned' }, beginAtZero: true },
+            y1: { position: 'right', title: { display: true, text: 'Balance' }, beginAtZero: true, grid: { drawOnChartArea: false } },
+          }
+        }
+      });
+    }
+
+    // 7. Turret composition per wave (stacked area)
+    const turretTypes = {};
+    for (const w of waves) for (const p of (w.turret_counts || [])) turretTypes[p.key] = true;
+    const tNames = Object.keys(turretTypes).sort();
+    if (tNames.length > 0) {
+      const tDatasets = tNames.map((name, i) => {
+        const avgPerWave = {};
+        for (const w of waves) {
+          const found = (w.turret_counts || []).find(p => p.key === name);
+          if (found) {
+            avgPerWave[w.wave] = (avgPerWave[w.wave] || 0) + found.value;
+          }
+        }
+        return {
+          label: name,
+          data: waveNums.map(w => (avgPerWave[w] || 0) / (waveCounts[w] || 1)),
+          backgroundColor: PALETTE[i % PALETTE.length] + '99',
+          borderColor: PALETTE[i % PALETTE.length],
+          fill: true,
+        };
+      });
+      charts.turrets = new Chart(document.getElementById('chart-turrets'), {
+        type: 'line',
+        data: { labels: waveNums, datasets: tDatasets },
+        options: { scales: { x: { title: { display: true, text: 'Wave' } }, y: { stacked: true, title: { display: true, text: 'Avg Turrets Placed' }, beginAtZero: true } }, plugins: { filler: { propagate: true } } }
+      });
+    }
+
+    // 8. Malus pick count
+    const malusPicks = {};
+    for (const w of waves) if (w.chosen_malus_id) malusPicks[w.chosen_malus_id] = (malusPicks[w.chosen_malus_id] || 0) + 1;
+    const malusEntries = Object.entries(malusPicks).sort((a, b) => a[1] - b[1]);
+    if (malusEntries.length > 0) {
+      charts.malus = new Chart(document.getElementById('chart-malus'), {
+        type: 'bar',
+        data: { labels: malusEntries.map(e => e[0]), datasets: [{ label: 'Picked', data: malusEntries.map(e => e[1]), backgroundColor: COLORS.red + 'cc', borderColor: COLORS.red, borderWidth: 1 }] },
+        options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { title: { display: true, text: 'Times Picked' }, beginAtZero: true, ticks: { stepSize: 1 } } } }
+      });
+    }
+  }
+
+  document.getElementById('zbg-filter-btn').addEventListener('click', applyFilters);
+  loadAll();
+})();
+</script>
+{{ end }}
