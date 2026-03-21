@@ -101,8 +101,8 @@
     font-size: 0.8rem;
   }
   .zbg-legend-item img {
-    width: 28px;
-    height: 28px;
+    width: 48px;
+    height: 48px;
     object-fit: contain;
   }
   .zbg-legend-item .zbg-legend-color {
@@ -156,6 +156,7 @@
     <div class="zbg-chart-section">
       <h2>2. Integrity Curve</h2>
       <div class="zbg-chart-wrap"><canvas id="chart-integrity"></canvas></div>
+      <div class="zbg-legend" id="legend-integrity"></div>
     </div>
 
     <div class="zbg-chart-section">
@@ -206,6 +207,7 @@
   const BASE = '{{ .Site.BaseURL }}'.replace(/\/$/, '');
   const ENEMY_IMG = name => `${BASE}/zerobugsgiven/img/enemies/${name}.png`;
   const TURRET_IMG = name => `${BASE}/zerobugsgiven/img/turrets/${name}.png`;
+  const INTEGRITY_IMG = `${BASE}/zerobugsgiven/img/integrity.png`;
 
   const COLORS = {
     red: '#e74c3c', green: '#2ecc71', orange: '#e67e22', blue: '#3498db',
@@ -229,6 +231,7 @@
   }
   ENEMY_TYPES.forEach(n => preloadImg(ENEMY_IMG(n)));
   TURRET_TYPES.forEach(n => preloadImg(TURRET_IMG(n)));
+  preloadImg(INTEGRITY_IMG);
 
   function isEnemy(name) { return ENEMY_TYPES.includes(name); }
   function isTurret(name) { return TURRET_TYPES.includes(name); }
@@ -245,7 +248,7 @@
       const ctx = chart.ctx;
       const yAxis = chart.scales.y;
       const labels = chart.data.labels;
-      const imgSize = 28;
+      const imgSize = 48;
 
       labels.forEach((label, i) => {
         const y = yAxis.getPixelForTick(i);
@@ -351,7 +354,7 @@
   function hBarOpts(xTitle, imgType) {
     return {
       indexAxis: 'y',
-      layout: { padding: { left: 36 } },
+      layout: { padding: { left: 56 } },
       plugins: {
         legend: { display: false },
         imageAxisLabels: { type: imgType }
@@ -395,6 +398,7 @@
         data: { labels: waveNums, datasets: [{ label: 'Avg Integrity', data: waveNums.map(w => waveIntegrity[w] / waveCounts[w]), borderColor: COLORS.green, backgroundColor: COLORS.green + '33', fill: true, tension: 0.3 }] },
         options: { plugins: { legend: { display: false } }, scales: { x: { title: { display: true, text: 'Wave' } }, y: { title: { display: true, text: 'Integrity' }, beginAtZero: true } } }
       });
+      document.getElementById('legend-integrity').innerHTML = `<div class="zbg-legend-item"><span class="zbg-legend-color" style="background:${COLORS.green}"></span><img src="${INTEGRITY_IMG}" alt="Integrity" title="Integrity"><span>Avg Integrity</span></div>`;
     }
 
     // 3a. Leak count by enemy (with images)
