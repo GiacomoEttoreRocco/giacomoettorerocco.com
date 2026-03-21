@@ -166,6 +166,17 @@
   .zbg-legend-item .zbg-legend-color {
     display: none;
   }
+  @media (max-width: 768px) {
+    .zbg-dashboard h1 { font-size: 1.6rem; }
+    .zbg-subtitle { font-size: 0.8rem; }
+    .zbg-summary { grid-template-columns: repeat(2, 1fr); }
+    .zbg-card .zbg-value { font-size: 1.4rem; }
+    .zbg-card .zbg-label { font-size: 0.75rem; }
+    .zbg-chart-section h2 { font-size: 1rem; }
+    .zbg-legend-item img { width: 48px; height: 48px; }
+    .zbg-legend-item { font-size: 0.8rem; padding: 0.3rem 0.5rem; }
+    .zbg-filters { font-size: 0.85rem; }
+  }
 </style>
 
 <div class="zbg-page-bg">
@@ -220,12 +231,12 @@
     </div>
 
     <div class="zbg-chart-section">
-      <h2>3a. Leaks by Enemy Type (count)</h2>
+      <h2>3a. Avg Leaks by Enemy Type</h2>
       <div class="zbg-chart-wrap"><canvas id="chart-leak-count"></canvas></div>
     </div>
 
     <div class="zbg-chart-section">
-      <h2>3b. Integrity Damage by Enemy Type</h2>
+      <h2>3b. Avg Integrity Damage by Enemy Type</h2>
       <div class="zbg-chart-wrap"><canvas id="chart-leak-integrity"></canvas></div>
     </div>
 
@@ -236,7 +247,7 @@
     </div>
 
     <div class="zbg-chart-section">
-      <h2>5. Bonus Pick Count</h2>
+      <h2>5. Bonus Pick Rate</h2>
       <div class="zbg-chart-wrap"><canvas id="chart-bonus"></canvas></div>
     </div>
 
@@ -252,7 +263,7 @@
     </div>
 
     <div class="zbg-chart-section">
-      <h2>8. Malus Pick Count</h2>
+      <h2>8. Malus Pick Rate</h2>
       <div class="zbg-chart-wrap"><canvas id="chart-malus"></canvas></div>
     </div>
   </div>
@@ -271,6 +282,14 @@
   Chart.defaults.scale.title.color = '#c8cdd3';
   Chart.defaults.scale.title.font = { size: 20, weight: 'bold' };
   Chart.defaults.scale.grid.color = 'rgba(255,255,255,0.08)';
+  Chart.defaults.plugins.tooltip.callbacks = {
+    label: function(ctx) {
+      const label = ctx.dataset.label || '';
+      const val = typeof ctx.parsed.x === 'number' && ctx.chart.options.indexAxis === 'y'
+        ? ctx.parsed.x : ctx.parsed.y;
+      return label + ': ' + (Number.isInteger(val) ? val : val.toFixed(1));
+    }
+  };
   const SUPABASE_URL = 'https://qoyyfnrhllhwlvbsshjb.supabase.co/rest/v1/';
   const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFveXlmbnJobGxod2x2YnNzaGpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwNzMwMTgsImV4cCI6MjA4OTY0OTAxOH0.6pXVi1sw2LoQFEkAHptEmp_hNxKCSld_G0APaEb7YmI';
 
@@ -352,7 +371,7 @@
   let charts = {};
 
   async function fetchData(table, query) {
-    const res = await fetch(SUPABASE_URL + table + '?select=*' + (query || ''), {
+    const res = await fetch(SUPABASE_URL + table + '?select=*&limit=10000' + (query || ''), {
       headers: { 'apikey': ANON_KEY, 'Authorization': 'Bearer ' + ANON_KEY }
     });
     return res.json();
@@ -451,14 +470,41 @@
     };
   }
 
-  function setCanvasHeight(canvasId, numEntries) {
+  function setCanvasHeight(canvasId, numEntries, hasIcons = true) {
     const canvas = document.getElementById(canvasId);
-    const rowHeight = 100; // px per bar (enough for 88px icons)
+    const rowHeight = hasIcons ? 100 : 40;
     canvas.parentElement.style.height = Math.max(200, numEntries * rowHeight + 60) + 'px';
   }
 
   function renderCharts(sessions, waves) {
     destroyCharts();
+
+    const chartCanvases = ['chart-death','chart-integrity','chart-leak-count','chart-leak-integrity','chart-dps','chart-bonus','chart-economy','chart-turrets','chart-malus'];
+    if (sessions.length === 0) {
+      chartCanvases.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.parentElement.style.height = '80px';
+          el.parentElement.style.display = 'flex';
+          el.parentElement.style.alignItems = 'center';
+          el.parentElement.style.justifyContent = 'center';
+          el.style.display = 'none';
+          const msg = document.createElement('span');
+          msg.textContent = 'No data for selected filters';
+          msg.style.opacity = '0.5';
+          msg.style.fontSize = '1rem';
+          msg.className = 'zbg-nodata';
+          if (!el.parentElement.querySelector('.zbg-nodata')) el.parentElement.appendChild(msg);
+        }
+      });
+      return;
+    }
+    // Clear any previous no-data messages
+    document.querySelectorAll('.zbg-nodata').forEach(el => el.remove());
+    chartCanvases.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.style.display = ''; el.parentElement.style.height = ''; el.parentElement.style.display = ''; }
+    });
 
     // Wave aggregation helpers
     const waveIntegrity = {};
@@ -492,29 +538,30 @@
       document.getElementById('legend-integrity').innerHTML = `<div class="zbg-legend-item"><span class="zbg-legend-color" style="background:${COLORS.green}"></span><img src="${INTEGRITY_IMG}" alt="Integrity" title="Integrity"><span>Avg Integrity</span></div>`;
     }
 
-    // 3a. Leak count by enemy (with images)
+    // 3a. Leak count by enemy (avg per session)
+    const numSessions = sessions.length || 1;
     const leakCount = {};
     for (const w of waves) for (const p of (w.leaked || [])) leakCount[p.key] = (leakCount[p.key] || 0) + p.value;
-    const leakEntries = Object.entries(leakCount).filter(([, v]) => v > 0).sort((a, b) => a[1] - b[1]);
+    const leakEntries = Object.entries(leakCount).filter(([, v]) => v > 0).map(([k, v]) => [k, v / numSessions]).sort((a, b) => a[1] - b[1]);
     if (leakEntries.length > 0) {
       setCanvasHeight('chart-leak-count', leakEntries.length);
       charts.leakCount = new Chart(document.getElementById('chart-leak-count'), {
         type: 'bar',
-        data: { labels: leakEntries.map(e => e[0]), datasets: [{ label: 'Leaks', data: leakEntries.map(e => e[1]), backgroundColor: COLORS.orange + 'cc', borderColor: COLORS.orange, borderWidth: 1 }] },
-        options: hBarOpts('Total Leaks', 'enemy', leakEntries.length)
+        data: { labels: leakEntries.map(e => e[0]), datasets: [{ label: 'Avg Leaks', data: leakEntries.map(e => e[1]), backgroundColor: COLORS.orange + 'cc', borderColor: COLORS.orange, borderWidth: 1 }] },
+        options: hBarOpts('Avg Leaks per Session', 'enemy', leakEntries.length)
       });
     }
 
-    // 3b. Integrity damage by enemy (with images)
+    // 3b. Integrity damage by enemy (avg per session)
     const leakInteg = {};
     for (const w of waves) for (const p of (w.leaked_integrity || [])) leakInteg[p.key] = (leakInteg[p.key] || 0) + p.value;
-    const integEntries = Object.entries(leakInteg).filter(([, v]) => v > 0).sort((a, b) => a[1] - b[1]);
+    const integEntries = Object.entries(leakInteg).filter(([, v]) => v > 0).map(([k, v]) => [k, v / numSessions]).sort((a, b) => a[1] - b[1]);
     if (integEntries.length > 0) {
       setCanvasHeight('chart-leak-integrity', integEntries.length);
       charts.leakInteg = new Chart(document.getElementById('chart-leak-integrity'), {
         type: 'bar',
-        data: { labels: integEntries.map(e => e[0]), datasets: [{ label: 'Integrity Removed', data: integEntries.map(e => e[1]), backgroundColor: COLORS.darkRed + 'cc', borderColor: COLORS.darkRed, borderWidth: 1 }] },
-        options: hBarOpts('Total Integrity Removed', 'enemy', integEntries.length)
+        data: { labels: integEntries.map(e => e[0]), datasets: [{ label: 'Avg Integrity Removed', data: integEntries.map(e => e[1]), backgroundColor: COLORS.darkRed + 'cc', borderColor: COLORS.darkRed, borderWidth: 1 }] },
+        options: hBarOpts('Avg Integrity Removed per Session', 'enemy', integEntries.length)
       });
     }
 
@@ -526,7 +573,11 @@
         turretDmg[p.key][w.wave] = (turretDmg[p.key][w.wave] || 0) + p.value;
       }
     }
-    const dmgTurretNames = Object.keys(turretDmg);
+    const dmgTurretNames = Object.keys(turretDmg).sort((a, b) => {
+      const totalA = Object.values(turretDmg[a]).reduce((s, v) => s + v, 0);
+      const totalB = Object.values(turretDmg[b]).reduce((s, v) => s + v, 0);
+      return totalB - totalA;
+    });
     if (dmgTurretNames.length > 0) {
       const dmgColors = dmgTurretNames.map((name, i) => getTurretColor(name, i));
       const dmgDatasets = dmgTurretNames.map((name, i) => ({
@@ -548,16 +599,16 @@
       buildImageLegend('legend-dps', dmgTurretNames, dmgColors, TURRET_IMG);
     }
 
-    // 5. Bonus pick count
+    // 5. Bonus pick rate (% of sessions)
     const bonusPicks = {};
     for (const w of waves) if (w.chosen_bonus_id) bonusPicks[w.chosen_bonus_id] = (bonusPicks[w.chosen_bonus_id] || 0) + 1;
-    const bonusEntries = Object.entries(bonusPicks).sort((a, b) => a[1] - b[1]);
+    const bonusEntries = Object.entries(bonusPicks).map(([k, v]) => [k, (v / numSessions) * 100]).sort((a, b) => a[1] - b[1]);
     if (bonusEntries.length > 0) {
-      setCanvasHeight('chart-bonus', bonusEntries.length);
+      setCanvasHeight('chart-bonus', bonusEntries.length, false);
       charts.bonus = new Chart(document.getElementById('chart-bonus'), {
         type: 'bar',
-        data: { labels: bonusEntries.map(e => e[0]), datasets: [{ label: 'Picked', data: bonusEntries.map(e => e[1]), backgroundColor: COLORS.blue + 'cc', borderColor: COLORS.blue, borderWidth: 1 }] },
-        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { title: { display: true, text: 'Times Picked' }, beginAtZero: true, ticks: { stepSize: 1 } } } }
+        data: { labels: bonusEntries.map(e => e[0]), datasets: [{ label: 'Pick Rate %', data: bonusEntries.map(e => e[1]), backgroundColor: COLORS.blue + 'cc', borderColor: COLORS.blue, borderWidth: 1 }] },
+        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { title: { display: true, text: 'Pick Rate %' }, beginAtZero: true, max: 100 } } }
       });
     }
 
@@ -617,16 +668,16 @@
       buildImageLegend('legend-turrets', tNames, tColors, TURRET_IMG);
     }
 
-    // 8. Malus pick count
+    // 8. Malus pick rate (% of sessions)
     const malusPicks = {};
     for (const w of waves) if (w.chosen_malus_id) malusPicks[w.chosen_malus_id] = (malusPicks[w.chosen_malus_id] || 0) + 1;
-    const malusEntries = Object.entries(malusPicks).sort((a, b) => a[1] - b[1]);
+    const malusEntries = Object.entries(malusPicks).map(([k, v]) => [k, (v / numSessions) * 100]).sort((a, b) => a[1] - b[1]);
     if (malusEntries.length > 0) {
-      setCanvasHeight('chart-malus', malusEntries.length);
+      setCanvasHeight('chart-malus', malusEntries.length, false);
       charts.malus = new Chart(document.getElementById('chart-malus'), {
         type: 'bar',
-        data: { labels: malusEntries.map(e => e[0]), datasets: [{ label: 'Picked', data: malusEntries.map(e => e[1]), backgroundColor: COLORS.red + 'cc', borderColor: COLORS.red, borderWidth: 1 }] },
-        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { title: { display: true, text: 'Times Picked' }, beginAtZero: true, ticks: { stepSize: 1 } } } }
+        data: { labels: malusEntries.map(e => e[0]), datasets: [{ label: 'Pick Rate %', data: malusEntries.map(e => e[1]), backgroundColor: COLORS.red + 'cc', borderColor: COLORS.red, borderWidth: 1 }] },
+        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { title: { display: true, text: 'Pick Rate %' }, beginAtZero: true, max: 100 } } }
       });
     }
   }
