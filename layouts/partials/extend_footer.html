@@ -12,7 +12,7 @@
   <span id="visit-count" style="font-weight: bold;">---</span>
 </div>
 <script>
-  fetch('https://{{ .Site.Params.goatCounterCode }}.goatcounter.com/counter/TOTAL.json')
+  fetch('https://{{ .Site.Params.goatCounterCode }}.goatcounter.com/counter/TOTAL.json?no-cache=' + Date.now())
     .then(response => response.json())
     .then(data => {
       document.getElementById('visit-count').textContent = data.count;
