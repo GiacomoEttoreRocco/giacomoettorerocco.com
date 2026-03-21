@@ -1,9 +1,34 @@
 {{ define "main" }}
 <style>
+  .zbg-page-bg {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: -1;
+    overflow: hidden;
+  }
+  .zbg-splash {
+    position: absolute;
+    opacity: 0.2;
+  }
+  .zbg-splash-bl {
+    bottom: -5%;
+    left: -4.99%;
+    width: 55%;
+    transform: rotate(0deg);
+  }
+  .zbg-splash-br {
+    bottom: -5%;
+    right: -4.99%;
+    width: 55%;
+    transform: scaleX(-1) rotate(180deg);
+  }
   .zbg-dashboard {
     max-width: 1100px;
     margin: 0 auto;
     padding: 0 1rem 3rem;
+    position: relative;
   }
   .zbg-dashboard h1 {
     font-size: 2.5rem;
@@ -78,6 +103,10 @@
   .zbg-chart-wrap {
     position: relative;
     width: 100%;
+    background: var(--entry);
+    border-radius: 10px;
+    padding: 1rem;
+    border: 1px solid var(--border);
   }
   .zbg-chart-wrap canvas {
     width: 100% !important;
@@ -137,6 +166,11 @@
     flex-shrink: 0;
   }
 </style>
+
+<div class="zbg-page-bg">
+  <img class="zbg-splash zbg-splash-bl" src="{{ .Site.BaseURL }}zerobugsgiven/img/splash-tl.png" alt="" style="transform: rotate(180deg);">
+  <img class="zbg-splash zbg-splash-br" src="{{ .Site.BaseURL }}zerobugsgiven/img/splash-tl.png" alt="">
+</div>
 
 <div class="zbg-dashboard">
   <h1><span class="zbg-title-zero">ZERO </span><span class="zbg-title-bugs">BUGS </span><span class="zbg-title-given">GIVEN.</span></h1>
@@ -228,7 +262,6 @@
 (function() {
   // Global Chart.js defaults for dark theme
   Chart.defaults.color = '#e0e0e0';
-  Chart.defaults.borderColor = 'rgba(255,255,255,0.1)';
   Chart.defaults.font.size = 20;
   Chart.defaults.plugins.legend.labels.color = '#e0e0e0';
   Chart.defaults.plugins.legend.labels.font = { size: 20 };
@@ -236,7 +269,7 @@
   Chart.defaults.scale.ticks.font = { size: 18 };
   Chart.defaults.scale.title.color = '#c8cdd3';
   Chart.defaults.scale.title.font = { size: 20, weight: 'bold' };
-  Chart.defaults.scale.grid = { color: 'rgba(255,255,255,0.08)' };
+  Chart.defaults.scale.grid.color = 'rgba(255,255,255,0.08)';
   const SUPABASE_URL = 'https://qoyyfnrhllhwlvbsshjb.supabase.co/rest/v1/';
   const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFveXlmbnJobGxod2x2YnNzaGpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwNzMwMTgsImV4cCI6MjA4OTY0OTAxOH0.6pXVi1sw2LoQFEkAHptEmp_hNxKCSld_G0APaEb7YmI';
 
@@ -387,9 +420,11 @@
   }
 
   // Horizontal bar chart options with image labels on Y axis
-  function hBarOpts(xTitle, imgType) {
+  function hBarOpts(xTitle, imgType, numEntries) {
     return {
       indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
       layout: { padding: { left: 96 } },
       plugins: {
         legend: { display: false },
@@ -400,6 +435,12 @@
         y: { ticks: { display: false } }
       }
     };
+  }
+
+  function setCanvasHeight(canvasId, numEntries) {
+    const canvas = document.getElementById(canvasId);
+    const rowHeight = 100; // px per bar (enough for 88px icons)
+    canvas.parentElement.style.height = Math.max(200, numEntries * rowHeight + 60) + 'px';
   }
 
   function renderCharts(sessions, waves) {
@@ -442,10 +483,11 @@
     for (const w of waves) for (const p of (w.leaked || [])) leakCount[p.key] = (leakCount[p.key] || 0) + p.value;
     const leakEntries = Object.entries(leakCount).filter(([, v]) => v > 0).sort((a, b) => a[1] - b[1]);
     if (leakEntries.length > 0) {
+      setCanvasHeight('chart-leak-count', leakEntries.length);
       charts.leakCount = new Chart(document.getElementById('chart-leak-count'), {
         type: 'bar',
         data: { labels: leakEntries.map(e => e[0]), datasets: [{ label: 'Leaks', data: leakEntries.map(e => e[1]), backgroundColor: COLORS.orange + 'cc', borderColor: COLORS.orange, borderWidth: 1 }] },
-        options: hBarOpts('Total Leaks', 'enemy')
+        options: hBarOpts('Total Leaks', 'enemy', leakEntries.length)
       });
     }
 
@@ -454,10 +496,11 @@
     for (const w of waves) for (const p of (w.leaked_integrity || [])) leakInteg[p.key] = (leakInteg[p.key] || 0) + p.value;
     const integEntries = Object.entries(leakInteg).filter(([, v]) => v > 0).sort((a, b) => a[1] - b[1]);
     if (integEntries.length > 0) {
+      setCanvasHeight('chart-leak-integrity', integEntries.length);
       charts.leakInteg = new Chart(document.getElementById('chart-leak-integrity'), {
         type: 'bar',
         data: { labels: integEntries.map(e => e[0]), datasets: [{ label: 'Integrity Removed', data: integEntries.map(e => e[1]), backgroundColor: COLORS.darkRed + 'cc', borderColor: COLORS.darkRed, borderWidth: 1 }] },
-        options: hBarOpts('Total Integrity Removed', 'enemy')
+        options: hBarOpts('Total Integrity Removed', 'enemy', integEntries.length)
       });
     }
 
@@ -496,10 +539,11 @@
     for (const w of waves) if (w.chosen_bonus_id) bonusPicks[w.chosen_bonus_id] = (bonusPicks[w.chosen_bonus_id] || 0) + 1;
     const bonusEntries = Object.entries(bonusPicks).sort((a, b) => a[1] - b[1]);
     if (bonusEntries.length > 0) {
+      setCanvasHeight('chart-bonus', bonusEntries.length);
       charts.bonus = new Chart(document.getElementById('chart-bonus'), {
         type: 'bar',
         data: { labels: bonusEntries.map(e => e[0]), datasets: [{ label: 'Picked', data: bonusEntries.map(e => e[1]), backgroundColor: COLORS.blue + 'cc', borderColor: COLORS.blue, borderWidth: 1 }] },
-        options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { title: { display: true, text: 'Times Picked' }, beginAtZero: true, ticks: { stepSize: 1 } } } }
+        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { title: { display: true, text: 'Times Picked' }, beginAtZero: true, ticks: { stepSize: 1 } } } }
       });
     }
 
@@ -564,10 +608,11 @@
     for (const w of waves) if (w.chosen_malus_id) malusPicks[w.chosen_malus_id] = (malusPicks[w.chosen_malus_id] || 0) + 1;
     const malusEntries = Object.entries(malusPicks).sort((a, b) => a[1] - b[1]);
     if (malusEntries.length > 0) {
+      setCanvasHeight('chart-malus', malusEntries.length);
       charts.malus = new Chart(document.getElementById('chart-malus'), {
         type: 'bar',
         data: { labels: malusEntries.map(e => e[0]), datasets: [{ label: 'Picked', data: malusEntries.map(e => e[1]), backgroundColor: COLORS.red + 'cc', borderColor: COLORS.red, borderWidth: 1 }] },
-        options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { title: { display: true, text: 'Times Picked' }, beginAtZero: true, ticks: { stepSize: 1 } } } }
+        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { title: { display: true, text: 'Times Picked' }, beginAtZero: true, ticks: { stepSize: 1 } } } }
       });
     }
   }
