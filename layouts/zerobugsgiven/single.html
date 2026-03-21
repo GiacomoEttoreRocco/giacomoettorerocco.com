@@ -286,6 +286,20 @@
   };
   const PALETTE = Object.values(COLORS);
 
+  // Fixed turret colors — maximally distinct, one per turret type
+  const TURRET_COLOR_MAP = {
+    'Shooter':      '#e74c3c',  // red
+    'Fanblade':     '#2ecc71',  // green
+    'Laserbeam':    '#3498db',  // blue
+    'Flamethrower': '#e67e22',  // orange
+    'Bytesboiler':  '#9b59b6',  // purple
+    'Mortar':       '#f39c12',  // yellow
+    'Electro':      '#00e5ff',  // cyan
+  };
+  function getTurretColor(name, idx) {
+    return TURRET_COLOR_MAP[name] || PALETTE[idx % PALETTE.length];
+  }
+
   // Known types for image mapping
   const ENEMY_TYPES = ['BlackBug','RedBug','GreenBug','BlueBug','VioletBug','CrabroWasp','GiantHornet','Worm','Bugbringher','MachilideBug','SpiderBug','LittleSpiderBug','DesertBug','HardSkinBug','ElectroScorpion','HalfCyborgFrog','PhenixTrojanTurtle','MarshMellowBug','GeneralRootRat'];
   const TURRET_TYPES = ['Shooter','Fanblade','Laserbeam','Flamethrower','Bytesboiler','Mortar','Electro'];
@@ -514,7 +528,7 @@
     }
     const dmgTurretNames = Object.keys(turretDmg);
     if (dmgTurretNames.length > 0) {
-      const dmgColors = dmgTurretNames.map((_, i) => PALETTE[i % PALETTE.length]);
+      const dmgColors = dmgTurretNames.map((name, i) => getTurretColor(name, i));
       const dmgDatasets = dmgTurretNames.map((name, i) => ({
         label: name,
         data: waveNums.map(w => {
@@ -578,7 +592,7 @@
     for (const w of waves) for (const p of (w.turret_counts || [])) turretTypes[p.key] = true;
     const tNames = Object.keys(turretTypes).sort();
     if (tNames.length > 0) {
-      const tColors = tNames.map((_, i) => PALETTE[i % PALETTE.length]);
+      const tColors = tNames.map((name, i) => getTurretColor(name, i));
       const tDatasets = tNames.map((name, i) => {
         const avgPerWave = {};
         for (const w of waves) {
