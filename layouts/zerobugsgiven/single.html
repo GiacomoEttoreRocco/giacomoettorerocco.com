@@ -85,6 +85,32 @@
     font-size: 1.2rem;
     opacity: 0.6;
   }
+
+  /* Custom legend with images */
+  .zbg-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    margin-top: 0.5rem;
+    justify-content: center;
+  }
+  .zbg-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.8rem;
+  }
+  .zbg-legend-item img {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+  }
+  .zbg-legend-item .zbg-legend-color {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
 </style>
 
 <div class="zbg-dashboard">
@@ -145,6 +171,7 @@
     <div class="zbg-chart-section">
       <h2>4. Damage by Turret Type</h2>
       <div class="zbg-chart-wrap"><canvas id="chart-dps"></canvas></div>
+      <div class="zbg-legend" id="legend-dps"></div>
     </div>
 
     <div class="zbg-chart-section">
@@ -160,6 +187,7 @@
     <div class="zbg-chart-section">
       <h2>7. Turret Composition per Wave</h2>
       <div class="zbg-chart-wrap"><canvas id="chart-turrets"></canvas></div>
+      <div class="zbg-legend" id="legend-turrets"></div>
     </div>
 
     <div class="zbg-chart-section">
@@ -175,12 +203,62 @@
   const SUPABASE_URL = 'https://qoyyfnrhllhwlvbsshjb.supabase.co/rest/v1/';
   const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFveXlmbnJobGxod2x2YnNzaGpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwNzMwMTgsImV4cCI6MjA4OTY0OTAxOH0.6pXVi1sw2LoQFEkAHptEmp_hNxKCSld_G0APaEb7YmI';
 
+  const BASE = '{{ .Site.BaseURL }}'.replace(/\/$/, '');
+  const ENEMY_IMG = name => `${BASE}/zerobugsgiven/img/enemies/${name}.png`;
+  const TURRET_IMG = name => `${BASE}/zerobugsgiven/img/turrets/${name}.png`;
+
   const COLORS = {
     red: '#e74c3c', green: '#2ecc71', orange: '#e67e22', blue: '#3498db',
     purple: '#9b59b6', yellow: '#f39c12', darkRed: '#c0392b', teal: '#1abc9c',
     pink: '#e91e63', indigo: '#3f51b5', lime: '#8bc34a', amber: '#ff9800',
   };
   const PALETTE = Object.values(COLORS);
+
+  // Known types for image mapping
+  const ENEMY_TYPES = ['BlackBug','RedBug','GreenBug','BlueBug','VioletBug','CrabroWasp','GiantHornet','Worm','Bugbringher','MachilideBug','SpiderBug','LittleSpiderBug','DesertBug','HardSkinBug','ElectroScorpion','HalfCyborgFrog','PhenixTrojanTurtle','MarshMellowBug','GeneralRootRat'];
+  const TURRET_TYPES = ['Shooter','Fanblade','Laserbeam','Flamethrower','Bytesboiler','Mortar','Electro'];
+
+  // Preload images
+  const imageCache = {};
+  function preloadImg(url) {
+    if (imageCache[url]) return imageCache[url];
+    const img = new Image();
+    img.src = url;
+    imageCache[url] = img;
+    return img;
+  }
+  ENEMY_TYPES.forEach(n => preloadImg(ENEMY_IMG(n)));
+  TURRET_TYPES.forEach(n => preloadImg(TURRET_IMG(n)));
+
+  function isEnemy(name) { return ENEMY_TYPES.includes(name); }
+  function isTurret(name) { return TURRET_TYPES.includes(name); }
+
+  // Chart.js plugin: draw images as Y-axis labels for horizontal bar charts
+  const imageAxisPlugin = {
+    id: 'imageAxisLabels',
+    afterDraw(chart) {
+      if (!chart.options.plugins.imageAxisLabels) return;
+      const { type } = chart.options.plugins.imageAxisLabels; // 'enemy' or 'turret'
+      const imgFn = type === 'turret' ? TURRET_IMG : ENEMY_IMG;
+      const meta = chart.getDatasetMeta(0);
+      if (!meta || !meta.data) return;
+      const ctx = chart.ctx;
+      const yAxis = chart.scales.y;
+      const labels = chart.data.labels;
+      const imgSize = 28;
+
+      labels.forEach((label, i) => {
+        const y = yAxis.getPixelForTick(i);
+        const imgUrl = imgFn(label);
+        const img = imageCache[imgUrl];
+        if (img && img.complete && img.naturalWidth > 0) {
+          const x = yAxis.left - imgSize - 6;
+          ctx.drawImage(img, x, y - imgSize / 2, imgSize, imgSize);
+        }
+      });
+    }
+  };
+  Chart.register(imageAxisPlugin);
 
   let allSessions = [];
   let allWaves = [];
@@ -200,16 +278,11 @@
     ]);
     allSessions = sessions;
     allWaves = waves;
+    // Wait a bit for images to preload
+    await new Promise(r => setTimeout(r, 300));
     applyFilters();
     document.getElementById('zbg-loading').style.display = 'none';
     document.getElementById('zbg-content').style.display = 'block';
-  }
-
-  function kvpSum(arr) {
-    const m = {};
-    if (!arr) return m;
-    for (const p of arr) { m[p.key] = (m[p.key] || 0) + p.value; }
-    return m;
   }
 
   function applyFilters() {
@@ -259,8 +332,48 @@
     charts = {};
   }
 
+  // Build an HTML legend with images
+  function buildImageLegend(containerId, names, colors, imgFn) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    el.innerHTML = names.map((name, i) => {
+      const color = colors[i % colors.length];
+      const imgUrl = imgFn(name);
+      return `<div class="zbg-legend-item">
+        <span class="zbg-legend-color" style="background:${color}"></span>
+        <img src="${imgUrl}" alt="${name}" title="${name}">
+        <span>${name}</span>
+      </div>`;
+    }).join('');
+  }
+
+  // Horizontal bar chart options with image labels on Y axis
+  function hBarOpts(xTitle, imgType) {
+    return {
+      indexAxis: 'y',
+      layout: { padding: { left: 36 } },
+      plugins: {
+        legend: { display: false },
+        imageAxisLabels: { type: imgType }
+      },
+      scales: {
+        x: { title: { display: true, text: xTitle }, beginAtZero: true },
+        y: { ticks: { display: false } }
+      }
+    };
+  }
+
   function renderCharts(sessions, waves) {
     destroyCharts();
+
+    // Wave aggregation helpers
+    const waveIntegrity = {};
+    const waveCounts = {};
+    for (const w of waves) {
+      waveIntegrity[w.wave] = (waveIntegrity[w.wave] || 0) + w.integrity_remaining;
+      waveCounts[w.wave] = (waveCounts[w.wave] || 0) + 1;
+    }
+    const waveNums = Object.keys(waveCounts).map(Number).sort((a, b) => a - b);
 
     // 1. Death wave histogram
     const defeats = sessions.filter(s => !s.victory);
@@ -276,13 +389,6 @@
     }
 
     // 2. Integrity curve
-    const waveIntegrity = {};
-    const waveCounts = {};
-    for (const w of waves) {
-      waveIntegrity[w.wave] = (waveIntegrity[w.wave] || 0) + w.integrity_remaining;
-      waveCounts[w.wave] = (waveCounts[w.wave] || 0) + 1;
-    }
-    const waveNums = Object.keys(waveIntegrity).map(Number).sort((a, b) => a - b);
     if (waveNums.length > 0) {
       charts.integrity = new Chart(document.getElementById('chart-integrity'), {
         type: 'line',
@@ -291,7 +397,7 @@
       });
     }
 
-    // 3a. Leak count by enemy
+    // 3a. Leak count by enemy (with images)
     const leakCount = {};
     for (const w of waves) for (const p of (w.leaked || [])) leakCount[p.key] = (leakCount[p.key] || 0) + p.value;
     const leakEntries = Object.entries(leakCount).filter(([, v]) => v > 0).sort((a, b) => a[1] - b[1]);
@@ -299,11 +405,11 @@
       charts.leakCount = new Chart(document.getElementById('chart-leak-count'), {
         type: 'bar',
         data: { labels: leakEntries.map(e => e[0]), datasets: [{ label: 'Leaks', data: leakEntries.map(e => e[1]), backgroundColor: COLORS.orange + 'cc', borderColor: COLORS.orange, borderWidth: 1 }] },
-        options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { title: { display: true, text: 'Total Leaks' }, beginAtZero: true } } }
+        options: hBarOpts('Total Leaks', 'enemy')
       });
     }
 
-    // 3b. Integrity damage by enemy
+    // 3b. Integrity damage by enemy (with images)
     const leakInteg = {};
     for (const w of waves) for (const p of (w.leaked_integrity || [])) leakInteg[p.key] = (leakInteg[p.key] || 0) + p.value;
     const integEntries = Object.entries(leakInteg).filter(([, v]) => v > 0).sort((a, b) => a[1] - b[1]);
@@ -311,11 +417,11 @@
       charts.leakInteg = new Chart(document.getElementById('chart-leak-integrity'), {
         type: 'bar',
         data: { labels: integEntries.map(e => e[0]), datasets: [{ label: 'Integrity Removed', data: integEntries.map(e => e[1]), backgroundColor: COLORS.darkRed + 'cc', borderColor: COLORS.darkRed, borderWidth: 1 }] },
-        options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { title: { display: true, text: 'Total Integrity Removed' }, beginAtZero: true } } }
+        options: hBarOpts('Total Integrity Removed', 'enemy')
       });
     }
 
-    // 4. Damage by turret type per wave
+    // 4. Damage by turret type per wave (with image legend)
     const turretDmg = {};
     for (const w of waves) {
       for (const p of (w.damage_by_turret || [])) {
@@ -325,6 +431,7 @@
     }
     const dmgTurretNames = Object.keys(turretDmg);
     if (dmgTurretNames.length > 0) {
+      const dmgColors = dmgTurretNames.map((_, i) => PALETTE[i % PALETTE.length]);
       const dmgDatasets = dmgTurretNames.map((name, i) => ({
         label: name,
         data: waveNums.map(w => {
@@ -332,15 +439,16 @@
           const count = waveCounts[w] || 1;
           return total / count;
         }),
-        borderColor: PALETTE[i % PALETTE.length],
+        borderColor: dmgColors[i],
         tension: 0.3,
         fill: false,
       }));
       charts.dps = new Chart(document.getElementById('chart-dps'), {
         type: 'line',
         data: { labels: waveNums, datasets: dmgDatasets },
-        options: { scales: { x: { title: { display: true, text: 'Wave' } }, y: { title: { display: true, text: 'Avg Damage' }, beginAtZero: true } } }
+        options: { plugins: { legend: { display: false } }, scales: { x: { title: { display: true, text: 'Wave' } }, y: { title: { display: true, text: 'Avg Damage' }, beginAtZero: true } } }
       });
+      buildImageLegend('legend-dps', dmgTurretNames, dmgColors, TURRET_IMG);
     }
 
     // 5. Bonus pick count
@@ -381,11 +489,12 @@
       });
     }
 
-    // 7. Turret composition per wave (stacked area)
+    // 7. Turret composition per wave (with image legend)
     const turretTypes = {};
     for (const w of waves) for (const p of (w.turret_counts || [])) turretTypes[p.key] = true;
     const tNames = Object.keys(turretTypes).sort();
     if (tNames.length > 0) {
+      const tColors = tNames.map((_, i) => PALETTE[i % PALETTE.length]);
       const tDatasets = tNames.map((name, i) => {
         const avgPerWave = {};
         for (const w of waves) {
@@ -397,16 +506,17 @@
         return {
           label: name,
           data: waveNums.map(w => (avgPerWave[w] || 0) / (waveCounts[w] || 1)),
-          backgroundColor: PALETTE[i % PALETTE.length] + '99',
-          borderColor: PALETTE[i % PALETTE.length],
+          backgroundColor: tColors[i] + '99',
+          borderColor: tColors[i],
           fill: true,
         };
       });
       charts.turrets = new Chart(document.getElementById('chart-turrets'), {
         type: 'line',
         data: { labels: waveNums, datasets: tDatasets },
-        options: { scales: { x: { title: { display: true, text: 'Wave' } }, y: { stacked: true, title: { display: true, text: 'Avg Turrets Placed' }, beginAtZero: true } }, plugins: { filler: { propagate: true } } }
+        options: { plugins: { legend: { display: false }, filler: { propagate: true } }, scales: { x: { title: { display: true, text: 'Wave' } }, y: { stacked: true, title: { display: true, text: 'Avg Turrets Placed' }, beginAtZero: true } } }
       });
+      buildImageLegend('legend-turrets', tNames, tColors, TURRET_IMG);
     }
 
     // 8. Malus pick count

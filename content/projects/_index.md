@@ -1,9 +1,9 @@
 ---
-title: "Projects"
+title: "Games"
 date: 2025-11-29
 draft: false
 ---
 
-# My Projects
+# My Games
 
-Here's a collection of projects I've worked on.
+Games I've developed.
