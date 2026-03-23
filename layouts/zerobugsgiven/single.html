@@ -194,6 +194,14 @@
     <!-- Filters -->
     <div class="zbg-filters">
       <div>
+        <label>Game Mode:</label>
+        <select id="zbg-filter-mode">
+          <option value="all">All</option>
+          <option value="Classic" selected>Classic</option>
+          <option value="Campaign">Campaign</option>
+        </select>
+      </div>
+      <div>
         <label>Last N sessions:</label>
         <input type="number" id="zbg-filter-last" min="0" value="0" style="width:70px;" title="0 = all">
       </div>
@@ -393,6 +401,8 @@
 
   function applyFilters() {
     let sessions = [...allSessions];
+    const modeFilter = document.getElementById('zbg-filter-mode').value;
+    if (modeFilter !== 'all') sessions = sessions.filter(s => (s.game_mode || 'Classic') === modeFilter);
     const resultFilter = document.getElementById('zbg-filter-result').value;
     if (resultFilter === 'defeats') sessions = sessions.filter(s => !s.victory);
     else if (resultFilter === 'victories') sessions = sessions.filter(s => s.victory);
