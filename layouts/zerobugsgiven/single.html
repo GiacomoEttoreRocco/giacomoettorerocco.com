@@ -140,6 +140,29 @@
     opacity: 0.6;
   }
 
+  /* Pick rate tables */
+  .zbg-pick-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+  }
+  .zbg-pick-table th, .zbg-pick-table td {
+    padding: 0.5rem 0.8rem;
+    text-align: left;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  .zbg-pick-table th {
+    opacity: 0.6;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .zbg-pick-table td:last-child {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
   /* Custom legend with images */
   .zbg-legend {
     display: flex;
@@ -228,7 +251,7 @@
 
     <!-- Charts -->
     <div class="zbg-chart-section">
-      <h2>1. Death Wave Distribution</h2>
+      <h2>1. End Wave Distribution</h2>
       <div class="zbg-chart-wrap"><canvas id="chart-death"></canvas></div>
     </div>
 
@@ -256,7 +279,7 @@
 
     <div class="zbg-chart-section">
       <h2>5. Bonus Pick Rate</h2>
-      <div class="zbg-chart-wrap"><canvas id="chart-bonus"></canvas></div>
+      <div class="zbg-chart-wrap" id="table-bonus"></div>
     </div>
 
     <div class="zbg-chart-section">
@@ -272,7 +295,7 @@
 
     <div class="zbg-chart-section">
       <h2>8. Malus Pick Rate</h2>
-      <div class="zbg-chart-wrap"><canvas id="chart-malus"></canvas></div>
+      <div class="zbg-chart-wrap" id="table-malus"></div>
     </div>
   </div>
 </div>
@@ -449,6 +472,15 @@
   }
 
   // Build an HTML legend with images
+  function buildPickTable(containerId, entries, nameHeader, valueHeader) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    const rows = entries.map(([name, val]) =>
+      `<tr><td>${name}</td><td>${val.toFixed(1)}%</td></tr>`
+    ).join('');
+    el.innerHTML = `<table class="zbg-pick-table"><thead><tr><th>${nameHeader}</th><th>${valueHeader}</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }
+
   function buildImageLegend(containerId, names, colors, imgFn) {
     const el = document.getElementById(containerId);
     if (!el) return;
@@ -488,8 +520,13 @@
 
   function renderCharts(sessions, waves) {
     destroyCharts();
+    // Clear previous tables
+    ['table-bonus', 'table-malus'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = '';
+    });
 
-    const chartCanvases = ['chart-death','chart-integrity','chart-leak-count','chart-leak-integrity','chart-dps','chart-bonus','chart-economy','chart-turrets','chart-malus'];
+    const chartCanvases = ['chart-death','chart-integrity','chart-leak-count','chart-leak-integrity','chart-dps','chart-economy','chart-turrets'];
     if (sessions.length === 0) {
       chartCanvases.forEach(id => {
         const el = document.getElementById(id);
@@ -525,16 +562,25 @@
     }
     const waveNums = Object.keys(waveCounts).map(Number).sort((a, b) => a - b);
 
-    // 1. Death wave histogram
+    // 1. End wave histogram (defeats + victories)
+    const victories = sessions.filter(s => s.victory);
     const defeats = sessions.filter(s => !s.victory);
-    if (defeats.length > 0) {
-      const maxWave = Math.max(...defeats.map(s => s.final_wave));
-      const bins = new Array(maxWave + 1).fill(0);
-      for (const s of defeats) bins[s.final_wave]++;
+    const victoryWave = 30;
+    const maxEndWave = Math.max(victoryWave, ...sessions.map(s => s.final_wave));
+    if (sessions.length > 0) {
+      const defeatBins = new Array(maxEndWave + 1).fill(0);
+      const victoryBins = new Array(maxEndWave + 1).fill(0);
+      for (const s of defeats) defeatBins[s.final_wave]++;
+      for (const s of victories) victoryBins[victoryWave]++;
+      const bossWaves = [9, 19, 29];
+      const labels = Array.from({ length: maxEndWave + 1 }, (_, i) => bossWaves.includes(i) ? i + ' (boss)' : i);
       charts.death = new Chart(document.getElementById('chart-death'), {
         type: 'bar',
-        data: { labels: bins.map((_, i) => i), datasets: [{ label: 'Deaths', data: bins, backgroundColor: COLORS.red + 'cc', borderColor: COLORS.red, borderWidth: 1 }] },
-        options: { plugins: { legend: { display: false } }, scales: { x: { title: { display: true, text: 'Wave' } }, y: { title: { display: true, text: 'Sessions' }, beginAtZero: true, ticks: { stepSize: 1 } } } }
+        data: { labels, datasets: [
+          { label: 'Defeats', data: defeatBins, backgroundColor: COLORS.red + 'cc', borderColor: COLORS.red, borderWidth: 1 },
+          { label: 'Victories', data: victoryBins, backgroundColor: COLORS.green + 'cc', borderColor: COLORS.green, borderWidth: 1 },
+        ] },
+        options: { plugins: { legend: { display: true } }, scales: { x: { stacked: true, title: { display: true, text: 'Wave' } }, y: { stacked: true, title: { display: true, text: 'Sessions' }, beginAtZero: true, ticks: { stepSize: 1 } } } }
       });
     }
 
@@ -609,17 +655,12 @@
       buildImageLegend('legend-dps', dmgTurretNames, dmgColors, TURRET_IMG);
     }
 
-    // 5. Bonus pick rate (% of sessions)
+    // 5. Bonus pick rate (table)
     const bonusPicks = {};
     for (const w of waves) if (w.chosen_bonus_id) bonusPicks[w.chosen_bonus_id] = (bonusPicks[w.chosen_bonus_id] || 0) + 1;
-    const bonusEntries = Object.entries(bonusPicks).map(([k, v]) => [k, (v / numSessions) * 100]).sort((a, b) => a[1] - b[1]);
+    const bonusEntries = Object.entries(bonusPicks).map(([k, v]) => [k, (v / numSessions) * 100]).sort((a, b) => b[1] - a[1]);
     if (bonusEntries.length > 0) {
-      setCanvasHeight('chart-bonus', bonusEntries.length, false);
-      charts.bonus = new Chart(document.getElementById('chart-bonus'), {
-        type: 'bar',
-        data: { labels: bonusEntries.map(e => e[0]), datasets: [{ label: 'Pick Rate %', data: bonusEntries.map(e => e[1]), backgroundColor: COLORS.blue + 'cc', borderColor: COLORS.blue, borderWidth: 1 }] },
-        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { title: { display: true, text: 'Pick Rate %' }, beginAtZero: true, max: 100 } } }
-      });
+      buildPickTable('table-bonus', bonusEntries, 'Bonus', 'Pick Rate %');
     }
 
     // 6. Economy per wave
@@ -673,22 +714,17 @@
       charts.turrets = new Chart(document.getElementById('chart-turrets'), {
         type: 'line',
         data: { labels: waveNums, datasets: tDatasets },
-        options: { plugins: { legend: { display: false }, filler: { propagate: true } }, scales: { x: { title: { display: true, text: 'Wave' } }, y: { stacked: true, title: { display: true, text: 'Avg Turrets Placed' }, beginAtZero: true } } }
+        options: { plugins: { legend: { display: false }, filler: { propagate: true } }, scales: { x: { title: { display: true, text: 'Wave' } }, y: { title: { display: true, text: 'Avg Turrets Placed' }, beginAtZero: true } } }
       });
       buildImageLegend('legend-turrets', tNames, tColors, TURRET_IMG);
     }
 
-    // 8. Malus pick rate (% of sessions)
+    // 8. Malus pick rate (table)
     const malusPicks = {};
     for (const w of waves) if (w.chosen_malus_id) malusPicks[w.chosen_malus_id] = (malusPicks[w.chosen_malus_id] || 0) + 1;
-    const malusEntries = Object.entries(malusPicks).map(([k, v]) => [k, (v / numSessions) * 100]).sort((a, b) => a[1] - b[1]);
+    const malusEntries = Object.entries(malusPicks).map(([k, v]) => [k, (v / numSessions) * 100]).sort((a, b) => b[1] - a[1]);
     if (malusEntries.length > 0) {
-      setCanvasHeight('chart-malus', malusEntries.length, false);
-      charts.malus = new Chart(document.getElementById('chart-malus'), {
-        type: 'bar',
-        data: { labels: malusEntries.map(e => e[0]), datasets: [{ label: 'Pick Rate %', data: malusEntries.map(e => e[1]), backgroundColor: COLORS.red + 'cc', borderColor: COLORS.red, borderWidth: 1 }] },
-        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { title: { display: true, text: 'Pick Rate %' }, beginAtZero: true, max: 100 } } }
-      });
+      buildPickTable('table-malus', malusEntries, 'Malus', 'Pick Rate %');
     }
   }
 
