@@ -539,6 +539,47 @@
     'Fortified': 'All goals gain +15 integrity',
   };
 
+  const BONUS_ICONS = {
+    'Rapid Charge': 'Laserbeam',
+    'Tactical Experience': 'Shooter',
+    'Focused Experience': 'Laserbeam',
+    'Advanced Distillation': 'Bytesboiler',
+    'Shooter Cadence': 'Shooter',
+    'Fan Acceleration': 'Fanblade',
+    'Electro Cadence': 'Electro',
+    'Extra Projectiles': 'Shooter',
+    'Chain Extension': 'Electro',
+    'Chain Reach': 'Electro',
+    'Freezing Beam': 'Laserbeam',
+    'Shock Rounds': 'Shooter',
+    'Seismic Impact': 'Mortar',
+    'Volatile Flames': 'Flamethrower',
+    'Razor Wind': 'Fanblade',
+    'Overcharge': 'Electro',
+    'Shatter': 'Laserbeam',
+    'Mercy Shot': 'Shooter',
+    'Vortex': 'Fanblade',
+    'Lacerate': 'Fanblade',
+    'Concussive Blast': 'Mortar',
+    'Junk Magnet': 'Bytesboiler',
+    'Piercing Rounds': 'Shooter',
+    'Chain Overload': 'Electro',
+    'Electro Link': 'Electro',
+    'Laser Siphon': 'Laserbeam',
+    'Structural Exposure': 'Laserbeam',
+    'Lingering Flames': 'Flamethrower',
+    'Scorching Embers': 'Flamethrower',
+    'Searing Wounds': 'Flamethrower',
+    'Meltdown': 'Flamethrower',
+    'Seismic Tremor': 'Mortar',
+    'Recycler': 'Bytesboiler',
+    'Overclock': 'Bytesboiler',
+    'Emergency Protocol': 'Bytesboiler',
+    'Inferno': 'Flamethrower',
+    'Tesla Field': 'Electro',
+    'Improved Rate of Fire': 'Shooter',
+  };
+
   const BONUS_PATTERNS = [
     [/^(.+) Enhancement$/, '{0} gain damage'],
     [/^(.+) Scope$/, '{0} gain range'],
@@ -601,25 +642,37 @@
     [/^(.+) Tax$/, '{0} turrets cost more'],
   ];
 
-  function getEffect(name, map, patterns) {
-    if (map[name]) return { text: map[name], icon: null };
+  const TURRET_ALIAS = { 'Laser': 'Laserbeam', 'Fan': 'Fanblade', 'Boiler': 'Bytesboiler' };
+  function resolveTurretName(name) { return TURRET_ALIAS[name] || name; }
+
+  function getEffect(name, map, patterns, iconMap) {
+    if (map[name]) return { text: map[name], icon: (iconMap && iconMap[name]) || null };
     if (patterns) {
       for (const [re, tpl] of patterns) {
         const m = name.match(re);
-        if (m) return { text: tpl.replace('{0}', m[1]), icon: m[1] };
+        if (m) return { text: tpl.replace('{0}', m[1]), icon: resolveTurretName(m[1]) };
       }
     }
     return { text: '', icon: null };
   }
 
-  function buildPickTable(containerId, entries, nameHeader, valueHeader, effectMap, effectPatterns, iconType) {
+  const ICON_SIZE = 'width:28px;height:28px;vertical-align:middle;margin:0 2px';
+  function inlineImg(src, alt) { return `<img src="${src}" alt="${alt}" title="${alt}" style="${ICON_SIZE}">`; }
+  function injectIcons(text) {
+    for (const t of TURRET_TYPES) text = text.replace(new RegExp(`\\b${t}\\b`, 'g'), inlineImg(TURRET_IMG(t), t));
+    for (const e of ENEMY_TYPES) text = text.replace(new RegExp(`\\b${e}\\b`, 'g'), inlineImg(ENEMY_IMG(e), e));
+    // Short names
+    for (const [short, full] of Object.entries(TURRET_ALIAS))
+      text = text.replace(new RegExp(`\\b${short}\\b`, 'g'), inlineImg(TURRET_IMG(full), full));
+    return text;
+  }
+
+  function buildPickTable(containerId, entries, nameHeader, valueHeader, effectMap, effectPatterns, iconType, iconMap) {
     const el = document.getElementById(containerId);
     if (!el) return;
-    const imgFn = iconType === 'turret' ? TURRET_IMG : ENEMY_IMG;
     const rows = entries.map(([name, val]) => {
-      const { text, icon } = getEffect(name, effectMap || {}, effectPatterns);
-      const iconHtml = icon ? `<img src="${imgFn(icon)}" alt="${icon}" title="${icon}" style="width:24px;height:24px;vertical-align:middle;margin-right:4px;">` : '';
-      return `<tr><td>${name}</td><td>${iconHtml}${text}</td><td>${val.toFixed(1)}%</td></tr>`;
+      const { text } = getEffect(name, effectMap || {}, effectPatterns, iconMap);
+      return `<tr><td>${name}</td><td>${injectIcons(text)}</td><td>${val.toFixed(1)}%</td></tr>`;
     }).join('');
     el.innerHTML = `<table class="zbg-pick-table"><thead><tr><th>${nameHeader}</th><th>Effect</th><th>${valueHeader}</th></tr></thead><tbody>${rows}</tbody></table>`;
   }
@@ -811,7 +864,7 @@
     for (const w of waves) if (w.chosen_bonus_id) bonusPicks[w.chosen_bonus_id] = (bonusPicks[w.chosen_bonus_id] || 0) + 1;
     const bonusEntries = Object.entries(bonusPicks).map(([k, v]) => [k, (v / numSessions) * 100]).sort((a, b) => b[1] - a[1]);
     if (bonusEntries.length > 0) {
-      buildPickTable('table-bonus', bonusEntries, 'Bonus', 'Pick Rate %', BONUS_EFFECTS, BONUS_PATTERNS, 'turret');
+      buildPickTable('table-bonus', bonusEntries, 'Bonus', 'Pick Rate %', BONUS_EFFECTS, BONUS_PATTERNS, 'turret', BONUS_ICONS);
     }
 
     // 6. Economy per wave
