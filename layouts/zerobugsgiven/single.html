@@ -668,8 +668,8 @@
   function inlineImg(src, alt) { return `<img src="${src}" alt="${alt}" title="${alt}" style="width:1.4em;height:1.4em;vertical-align:middle;display:inline;margin:0 1px">`; }
   function injectIcons(text) {
     // Build one combined regex to replace all keywords in a single pass
-    const replacements = {};
-    // Stat keywords (add longest first to avoid partial matches)
+    // All keys stored lowercase for case-insensitive lookup
+    const rep = {};
     const statMap = {
       'physical damage resistance': ['physical', 'Physical Damage Resistance'],
       'physical damage': ['physical', 'Physical Damage'],
@@ -686,16 +686,14 @@
       'barrier': ['shield', 'Barrier'],
     };
     for (const [kw, [key, label]] of Object.entries(statMap))
-      replacements[kw] = inlineImg(STAT_IMGS[key], label);
-    // Turrets
-    for (const t of TURRET_TYPES) replacements[t] = inlineImg(TURRET_IMG(t), t);
-    for (const [short, full] of Object.entries(TURRET_ALIAS)) replacements[short] = inlineImg(TURRET_IMG(full), full);
-    // Enemies
-    for (const e of ENEMY_TYPES) replacements[e] = inlineImg(ENEMY_IMG(e), e);
+      rep[kw.toLowerCase()] = inlineImg(STAT_IMGS[key], label);
+    for (const t of TURRET_TYPES) rep[t.toLowerCase()] = inlineImg(TURRET_IMG(t), t);
+    for (const [short, full] of Object.entries(TURRET_ALIAS)) rep[short.toLowerCase()] = inlineImg(TURRET_IMG(full), full);
+    for (const e of ENEMY_TYPES) rep[e.toLowerCase()] = inlineImg(ENEMY_IMG(e), e);
     // Sort keys longest-first so "physical damage" matches before "physical"
-    const keys = Object.keys(replacements).sort((a, b) => b.length - a.length);
+    const keys = Object.keys(rep).sort((a, b) => b.length - a.length);
     const re = new RegExp('\\b(' + keys.map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')\\b', 'gi');
-    return text.replace(re, m => replacements[m] || replacements[m.toLowerCase()] || m);
+    return text.replace(re, m => rep[m.toLowerCase()] || m);
   }
 
   function buildPickTable(containerId, entries, nameHeader, valueHeader, effectMap, effectPatterns, iconType, iconMap) {
