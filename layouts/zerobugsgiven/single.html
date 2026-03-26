@@ -473,77 +473,112 @@
 
   // Build an HTML legend with images
   const BONUS_EFFECTS = {
-    'Extra Loot': 'Enemies drop more junkbytes on kill',
-    'Visual Experience': 'Turrets gain range per level',
-    'Special Power': 'All turrets gain special damage',
+    // Global
     'Physical Power': 'All turrets gain physical damage',
-    'Fan Acceleration': 'Fanblade turrets spin faster',
-    'Shooter Cadence': 'Shooter turrets gain fire rate',
-    'Lingering Flames': 'Flamethrower burn duration x3',
-    'Devastating Strike': 'Turrets gain crit damage multiplier',
-    'Bulk Discount': 'All turrets cost less junkbytes',
-    'Vortex': 'Fanblade turrets slow enemies on hit',
-    'Steam Blast': 'Flame on boiler triggers steam AoE',
-    'Searing Wounds': 'Flamethrower x2 damage to enemies below 50% HP',
-    'Lethal Precision': 'Turrets gain crit chance',
-    'Fan Enhancement': 'Fanblade turrets gain damage',
+    'Special Power': 'All turrets gain special damage',
+    'Improved Rate of Fire': 'Shooter turrets gain fire rate',
     'Extended Range': 'All turrets gain range',
-    'Chain Reach': 'Electro turrets gain chain range',
-    'Chain Extension': 'Electro turrets gain chain bounces',
-    'Barricade': 'Enemies slowed near integrity goals',
-    'Arcane Surge': 'Turrets gain special damage burst',
-    'Tesla Field': 'Electro turrets create a damaging field',
-    'Tactical Experience': 'Shooter turrets gain fire rate per level',
-    'Seismic Tremor': 'Mortar reduces physical resist on impact',
-    'Seismic Impact': 'Mortar x2 damage to stunned enemies',
-    'Recycler': 'BytesBoiler converts overkill to junkbytes',
+    'Lethal Precision': 'Turrets gain crit chance',
+    'Devastating Strike': 'Turrets gain crit damage multiplier',
     'Rapid Charge': 'Laser turrets ramp up faster',
+    // Enemy debuff
+    'Extra Loot': 'Enemies drop more junkbytes on kill',
+    'Thermal Vulnerability': 'Burning enemies have -50% special damage resistance',
+    // Per level
     'Physical Experience': 'Turrets gain physical damage per level',
-    'Overcharge': 'Electro stun duration x2',
-    'Mercy Shot': 'Shooter x3 damage to enemies below 20% HP',
-    'Market Crash': 'All turret costs reduced temporarily',
-    'Lockdown': 'Stunned enemies take more damage',
-    'Laser Precision': 'Laser turrets gain crit chance',
-    'Junk Magnet': 'BytesBoiler enemies drop +50% junkbytes',
-    'Inferno': 'Flamethrower enhanced fire damage',
-    'Guardian Backup': 'Survive a lethal hit once with 1 integrity',
-    'Freezing Beam': 'Laser turrets slow enemies',
-    'Fortified': 'Turrets gain damage resistance',
+    'Special Experience': 'Turrets gain special damage per level',
+    'Tactical Experience': 'Shooter turrets gain fire rate per level',
+    'Visual Experience': 'Turrets gain range per level',
+    'Lethal Instinct': 'Turrets gain crit chance per level',
     'Focused Experience': 'Laser turrets ramp up faster per level',
-    'Flamethrower Scope': 'Flamethrower turrets gain range',
-    'Flamethrower Enhancement': 'Flamethrower turrets gain damage',
-    'Extra Projectiles': 'Shooter turrets fire extra projectiles',
-    'Emergency Protocol': 'BytesBoiler x2 production when integrity ≤30%',
-    'Electro Link': 'Nearby Electro turrets form a damaging arc',
+    // Economy
+    'Advanced Distillation': 'BytesBoiler gains junkbytes production/s',
+    'Bulk Discount': 'All turrets cost less junkbytes',
+    // Specific turret
+    'Shooter Cadence': 'Shooter turrets gain fire rate',
+    'Fan Acceleration': 'Fanblade turrets spin faster',
     'Electro Cadence': 'Electro turrets gain fire rate',
+    'Extra Projectiles': 'Shooter turrets fire extra projectiles',
+    'Chain Extension': 'Electro turrets gain chain bounces',
+    'Chain Reach': 'Electro turrets gain chain range',
+    'Freezing Beam': 'Laser turrets slow enemies',
+    // Mechanics
+    'Shock Rounds': 'Shooter x2 damage to stunned enemies',
+    'Seismic Impact': 'Mortar x2 damage to stunned enemies',
+    'Volatile Flames': 'Burning enemies spread fire on death',
+    'Razor Wind': 'Fanblade can hit flying enemies',
+    'Overcharge': 'Electro stun duration x2',
+    'Shatter': 'Laser x2 damage to heavily slowed enemies',
+    'Mercy Shot': 'Shooter x3 damage to enemies below 20% HP',
+    'Vortex': 'Fanblade turrets slow enemies on hit',
+    'Lacerate': 'Fanblade hits apply bleed',
+    'Concussive Blast': 'Mortar impacts slow enemies',
+    'Junk Magnet': 'BytesBoiler nearby deaths drop +50% junkbytes',
+    'Piercing Rounds': 'Shooter bullets pierce to next enemy',
+    'Chain Overload': 'Electro final charge explodes nearby',
+    'Electro Link': 'Nearby Electro turrets form a damaging arc',
+    'Laser Siphon': 'Laser gains +1 integrity every 5 kills',
+    'Structural Exposure': 'Laser reduces -20% physical resist on target',
+    'Lingering Flames': 'Flamethrower burn duration x3',
+    'Scorching Embers': 'Flamethrower burn damage +50%',
+    'Searing Wounds': 'Flamethrower x2 damage to enemies below 50% HP',
+    'Meltdown': 'Flamethrower fire bypasses barrier',
+    'Seismic Tremor': 'Mortar reduces physical resist on impact',
+    'Recycler': 'BytesBoiler converts overkill to junkbytes',
+    'Overclock': 'BytesBoiler +10% production per enemy in range',
     'Electrified Blades': 'Electro charges Fanblade hits',
-    'Arsenal Mastery': 'All turrets gain damage',
+    'Steam Blast': 'Flame on boiler triggers steam AoE',
+    'Emergency Protocol': 'BytesBoiler x2 production when integrity ≤30%',
+    'Barricade': 'Enemies slowed near integrity goals',
+    'Guardian Backup': 'Survive a lethal hit once with 1 integrity',
+    // Outpost
+    'Signal Intelligence': 'Outpost conquest costs reduced',
+    'Asset Seizure': 'Conquering an outpost grants junkbytes',
   };
 
+  const BONUS_PATTERNS = [
+    [/^(.+) Enhancement$/, '{0} gain damage'],
+    [/^(.+) Scope$/, '{0} gain range'],
+    [/^(.+) Precision$/, '{0} gain crit chance'],
+    [/^(.+) Devastation$/, '{0} gain crit damage multiplier'],
+    [/^(.+) Deal$/, '{0} cost reduced'],
+  ];
+
   const MALUS_EFFECTS = {
-    'Toxic Paths': 'Enemies regen health on corrupted cells',
+    // Global
     'Vital Reinforcement': 'All enemies gain health',
-    'Regeneration': 'All enemies regen health over time',
-    'Hardened Paths': 'Enemies gain physical resist on corrupted cells',
-    'Energy Shield': 'All enemies gain special damage resistance',
-    'Digital Corruption': 'BlackBug drop invulnerability glitches on death',
-    'Shield': 'All enemies gain a shield barrier',
-    'Inflation': 'All turrets cost more junkbytes',
-    'Apex Predators': 'Stronger enemy variants spawn',
-    'Rallying Cry': 'Enemies on death speed up nearby allies',
-    'Phase Shift': 'Enemies ignore damage periodically',
-    'Impenetrable': 'Enemies gain damage resistance',
-    'Exoskeleton': 'All enemies gain physical damage resistance',
-    'Total Decay': 'Integrity degrades over time',
-    'Swarm Intelligence': 'Enemies gain speed when many are alive',
     'Sudden Sprint': 'All enemies gain speed',
+    'Regeneration': 'All enemies regen health over time',
+    'Exoskeleton': 'All enemies gain physical damage resistance',
+    'Energy Shield': 'All enemies gain special damage resistance',
+    'Agility': 'All enemies gain slow resistance',
+    'Fortitude': 'All enemies gain stun resistance',
+    'Shield': 'All enemies gain a shield barrier',
+    'Devastating Impact': 'All enemies remove extra integrity on passing',
+    'Accelerated Swarm': 'Spawn delay reduced between enemies',
     'Overwhelming Numbers': 'Each wave spawns more enemies',
-    'Indigestion': 'HalfCyborgFrog also vomits GreenBug',
-    'Corrupted Feedback': 'Turrets that kill on corrupted cells stop firing',
     'Adaptive Plating': 'Enemies gain resist to repeated damage types',
-    'Laser Tax': 'Laser turrets cost more',
-    'Fan Tax': 'Fanblade turrets cost more',
-    'Electro Tax': 'Electro turrets cost more',
+    'Phase Shift': 'Enemies ignore damage periodically',
+    'Swarm Intelligence': 'Enemies gain speed when many are alive',
+    // Economy
+    'Inflation': 'All turrets cost more junkbytes',
+    // Special
+    'Digital Corruption': 'BlackBug drop invulnerability glitches on death',
+    'Indigestion': 'HalfCyborgFrog also vomits GreenBug',
+    'Rallying Cry': 'Enemies on death speed up nearby allies',
+    // Corrupted paths
+    'Toxic Paths': 'Enemies regen health on corrupted cells',
+    'Accelerated Paths': 'Enemies gain speed on corrupted cells',
+    'Hardened Paths': 'Enemies gain damage resist on corrupted cells',
+    'Shielded Paths': 'Enemies gain permanent barrier on corrupted cells',
+    'Resilient Paths': 'Enemies gain slow resistance on corrupted cells',
+    'Unyielding Paths': 'Enemies gain stun resistance on corrupted cells',
+    'Corrupted Duplication': 'Enemies on corrupted cells spawn a clone',
+    'Corrupted Feedback': 'Turrets that kill on corrupted cells stop firing',
+    'Spreading Corruption': 'Paths become corrupted faster',
+    // Outpost
+    'Fortified Position': 'Outpost conquest costs more',
+    'Rapid Escalation': 'Unconquered outposts escalate threat faster',
   };
 
   const MALUS_PATTERNS = [
@@ -556,6 +591,7 @@
     [/^Shielded (.+)$/, '{0} gain a shield barrier'],
     [/^Regenerating (.+)$/, '{0} regenerate health over time'],
     [/^Early (.+)$/, '{0} appear earlier in waves'],
+    [/^(.+) Tax$/, '{0} turrets cost more'],
   ];
 
   function getEffect(name, map, patterns) {
@@ -625,6 +661,13 @@
     });
 
     const chartCanvases = ['chart-death','chart-integrity','chart-leak-count','chart-leak-integrity','chart-dps','chart-economy','chart-turrets'];
+    // Clear all canvases so stale frames don't persist
+    chartCanvases.forEach(id => {
+      const cv = document.getElementById(id);
+      if (cv) { const ctx = cv.getContext('2d'); ctx.clearRect(0, 0, cv.width, cv.height); }
+    });
+    // Clear image legends
+    document.querySelectorAll('.zbg-legend').forEach(el => el.innerHTML = '');
     if (sessions.length === 0) {
       chartCanvases.forEach(id => {
         const el = document.getElementById(id);
@@ -772,7 +815,7 @@
     for (const w of waves) if (w.chosen_bonus_id) bonusPicks[w.chosen_bonus_id] = (bonusPicks[w.chosen_bonus_id] || 0) + 1;
     const bonusEntries = Object.entries(bonusPicks).map(([k, v]) => [k, (v / numSessions) * 100]).sort((a, b) => b[1] - a[1]);
     if (bonusEntries.length > 0) {
-      buildPickTable('table-bonus', bonusEntries, 'Bonus', 'Pick Rate %', BONUS_EFFECTS);
+      buildPickTable('table-bonus', bonusEntries, 'Bonus', 'Pick Rate %', BONUS_EFFECTS, BONUS_PATTERNS);
     }
 
     // 6. Economy per wave
