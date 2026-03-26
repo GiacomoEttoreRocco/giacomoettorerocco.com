@@ -665,33 +665,37 @@
     return { text: '', icon: null };
   }
 
-  const ICON_SIZE = 'width:28px;height:28px;vertical-align:middle;margin:0 2px';
-  function inlineImg(src, alt) { return `<img src="${src}" alt="${alt}" title="${alt}" style="${ICON_SIZE}">`; }
-  const STAT_KEYWORDS = [
-    [/\bphysical damage\b/gi, 'physical', 'Physical Damage'],
-    [/\bphysical resist\b/gi, 'physical', 'Physical Resist'],
-    [/\bphysical\b/gi, 'physical', 'Physical'],
-    [/\bspecial damage\b/gi, 'special', 'Special Damage'],
-    [/\bspecial resistance\b/gi, 'special', 'Special Resistance'],
-    [/\bspecial\b/gi, 'special', 'Special'],
-    [/\bjunkbytes\b/gi, 'junkbytes', 'Junkbytes'],
-    [/\bintegrity\b/gi, 'integrity', 'Integrity'],
-    [/\bhealth\b/gi, 'health', 'Health'],
-    [/\bshield\b/gi, 'shield', 'Shield'],
-    [/\bbarrier\b/gi, 'shield', 'Barrier'],
-  ];
-
+  function inlineImg(src, alt) { return `<img src="${src}" alt="${alt}" title="${alt}" style="width:1.4em;height:1.4em;vertical-align:middle;display:inline;margin:0 1px">`; }
   function injectIcons(text) {
-    // Stat icons first (longer matches before shorter)
-    for (const [re, statKey, label] of STAT_KEYWORDS)
-      text = text.replace(re, inlineImg(STAT_IMGS[statKey], label));
-    // Turret icons
-    for (const t of TURRET_TYPES) text = text.replace(new RegExp(`\\b${t}\\b`, 'g'), inlineImg(TURRET_IMG(t), t));
-    for (const [short, full] of Object.entries(TURRET_ALIAS))
-      text = text.replace(new RegExp(`\\b${short}\\b`, 'g'), inlineImg(TURRET_IMG(full), full));
-    // Enemy icons
-    for (const e of ENEMY_TYPES) text = text.replace(new RegExp(`\\b${e}\\b`, 'g'), inlineImg(ENEMY_IMG(e), e));
-    return text;
+    // Build one combined regex to replace all keywords in a single pass
+    const replacements = {};
+    // Stat keywords (add longest first to avoid partial matches)
+    const statMap = {
+      'physical damage resistance': ['physical', 'Physical Damage Resistance'],
+      'physical damage': ['physical', 'Physical Damage'],
+      'physical resist': ['physical', 'Physical Resist'],
+      'special damage resistance': ['special', 'Special Damage Resistance'],
+      'special damage': ['special', 'Special Damage'],
+      'special resistance': ['special', 'Special Resistance'],
+      'junkbytes': ['junkbytes', 'Junkbytes'],
+      'integrity': ['integrity', 'Integrity'],
+      'health regen': ['health', 'Health Regen'],
+      'health': ['health', 'Health'],
+      'shield barrier': ['shield', 'Shield Barrier'],
+      'shield': ['shield', 'Shield'],
+      'barrier': ['shield', 'Barrier'],
+    };
+    for (const [kw, [key, label]] of Object.entries(statMap))
+      replacements[kw] = inlineImg(STAT_IMGS[key], label);
+    // Turrets
+    for (const t of TURRET_TYPES) replacements[t] = inlineImg(TURRET_IMG(t), t);
+    for (const [short, full] of Object.entries(TURRET_ALIAS)) replacements[short] = inlineImg(TURRET_IMG(full), full);
+    // Enemies
+    for (const e of ENEMY_TYPES) replacements[e] = inlineImg(ENEMY_IMG(e), e);
+    // Sort keys longest-first so "physical damage" matches before "physical"
+    const keys = Object.keys(replacements).sort((a, b) => b.length - a.length);
+    const re = new RegExp('\\b(' + keys.map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')\\b', 'gi');
+    return text.replace(re, m => replacements[m] || replacements[m.toLowerCase()] || m);
   }
 
   function buildPickTable(containerId, entries, nameHeader, valueHeader, effectMap, effectPatterns, iconType, iconMap) {
