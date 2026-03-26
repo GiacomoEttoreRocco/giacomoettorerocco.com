@@ -472,13 +472,111 @@
   }
 
   // Build an HTML legend with images
-  function buildPickTable(containerId, entries, nameHeader, valueHeader) {
+  const BONUS_EFFECTS = {
+    'Extra Loot': 'Enemies drop more junkbytes on kill',
+    'Visual Experience': 'Turrets gain range per level',
+    'Special Power': 'All turrets gain special damage',
+    'Physical Power': 'All turrets gain physical damage',
+    'Fan Acceleration': 'Fanblade turrets spin faster',
+    'Shooter Cadence': 'Shooter turrets gain fire rate',
+    'Lingering Flames': 'Flamethrower burn duration x3',
+    'Devastating Strike': 'Turrets gain crit damage multiplier',
+    'Bulk Discount': 'All turrets cost less junkbytes',
+    'Vortex': 'Fanblade turrets slow enemies on hit',
+    'Steam Blast': 'Flame on boiler triggers steam AoE',
+    'Searing Wounds': 'Flamethrower x2 damage to enemies below 50% HP',
+    'Lethal Precision': 'Turrets gain crit chance',
+    'Fan Enhancement': 'Fanblade turrets gain damage',
+    'Extended Range': 'All turrets gain range',
+    'Chain Reach': 'Electro turrets gain chain range',
+    'Chain Extension': 'Electro turrets gain chain bounces',
+    'Barricade': 'Enemies slowed near integrity goals',
+    'Arcane Surge': 'Turrets gain special damage burst',
+    'Tesla Field': 'Electro turrets create a damaging field',
+    'Tactical Experience': 'Shooter turrets gain fire rate per level',
+    'Seismic Tremor': 'Mortar reduces physical resist on impact',
+    'Seismic Impact': 'Mortar x2 damage to stunned enemies',
+    'Recycler': 'BytesBoiler converts overkill to junkbytes',
+    'Rapid Charge': 'Laser turrets ramp up faster',
+    'Physical Experience': 'Turrets gain physical damage per level',
+    'Overcharge': 'Electro stun duration x2',
+    'Mercy Shot': 'Shooter x3 damage to enemies below 20% HP',
+    'Market Crash': 'All turret costs reduced temporarily',
+    'Lockdown': 'Stunned enemies take more damage',
+    'Laser Precision': 'Laser turrets gain crit chance',
+    'Junk Magnet': 'BytesBoiler enemies drop +50% junkbytes',
+    'Inferno': 'Flamethrower enhanced fire damage',
+    'Guardian Backup': 'Survive a lethal hit once with 1 integrity',
+    'Freezing Beam': 'Laser turrets slow enemies',
+    'Fortified': 'Turrets gain damage resistance',
+    'Focused Experience': 'Laser turrets ramp up faster per level',
+    'Flamethrower Scope': 'Flamethrower turrets gain range',
+    'Flamethrower Enhancement': 'Flamethrower turrets gain damage',
+    'Extra Projectiles': 'Shooter turrets fire extra projectiles',
+    'Emergency Protocol': 'BytesBoiler x2 production when integrity ≤30%',
+    'Electro Link': 'Nearby Electro turrets form a damaging arc',
+    'Electro Cadence': 'Electro turrets gain fire rate',
+    'Electrified Blades': 'Electro charges Fanblade hits',
+    'Arsenal Mastery': 'All turrets gain damage',
+  };
+
+  const MALUS_EFFECTS = {
+    'Toxic Paths': 'Enemies regen health on corrupted cells',
+    'Vital Reinforcement': 'All enemies gain health',
+    'Regeneration': 'All enemies regen health over time',
+    'Hardened Paths': 'Enemies gain physical resist on corrupted cells',
+    'Energy Shield': 'All enemies gain special damage resistance',
+    'Digital Corruption': 'BlackBug drop invulnerability glitches on death',
+    'Shield': 'All enemies gain a shield barrier',
+    'Inflation': 'All turrets cost more junkbytes',
+    'Apex Predators': 'Stronger enemy variants spawn',
+    'Rallying Cry': 'Enemies on death speed up nearby allies',
+    'Phase Shift': 'Enemies ignore damage periodically',
+    'Impenetrable': 'Enemies gain damage resistance',
+    'Exoskeleton': 'All enemies gain physical damage resistance',
+    'Total Decay': 'Integrity degrades over time',
+    'Swarm Intelligence': 'Enemies gain speed when many are alive',
+    'Sudden Sprint': 'All enemies gain speed',
+    'Overwhelming Numbers': 'Each wave spawns more enemies',
+    'Indigestion': 'HalfCyborgFrog also vomits GreenBug',
+    'Corrupted Feedback': 'Turrets that kill on corrupted cells stop firing',
+    'Adaptive Plating': 'Enemies gain resist to repeated damage types',
+    'Laser Tax': 'Laser turrets cost more',
+    'Fan Tax': 'Fanblade turrets cost more',
+    'Electro Tax': 'Electro turrets cost more',
+  };
+
+  const MALUS_PATTERNS = [
+    [/^Hardened (.+)$/, '{0} gain physical damage resistance'],
+    [/^Resistant (.+)$/, '{0} gain special damage resistance'],
+    [/^Nimble (.+)$/, '{0} gain slow resistance'],
+    [/^Stalwart (.+)$/, '{0} gain stun resistance'],
+    [/^Swift (.+)$/, '{0} gain speed'],
+    [/^Empowered (.+)$/, '{0} gain extra health'],
+    [/^Shielded (.+)$/, '{0} gain a shield barrier'],
+    [/^Regenerating (.+)$/, '{0} regenerate health over time'],
+    [/^Early (.+)$/, '{0} appear earlier in waves'],
+  ];
+
+  function getEffect(name, map, patterns) {
+    if (map[name]) return map[name];
+    if (patterns) {
+      for (const [re, tpl] of patterns) {
+        const m = name.match(re);
+        if (m) return tpl.replace('{0}', m[1]);
+      }
+    }
+    return '';
+  }
+
+  function buildPickTable(containerId, entries, nameHeader, valueHeader, effectMap, effectPatterns) {
     const el = document.getElementById(containerId);
     if (!el) return;
-    const rows = entries.map(([name, val]) =>
-      `<tr><td>${name}</td><td>${val.toFixed(1)}%</td></tr>`
-    ).join('');
-    el.innerHTML = `<table class="zbg-pick-table"><thead><tr><th>${nameHeader}</th><th>${valueHeader}</th></tr></thead><tbody>${rows}</tbody></table>`;
+    const rows = entries.map(([name, val]) => {
+      const effect = getEffect(name, effectMap || {}, effectPatterns);
+      return `<tr><td>${name}</td><td>${effect}</td><td>${val.toFixed(1)}%</td></tr>`;
+    }).join('');
+    el.innerHTML = `<table class="zbg-pick-table"><thead><tr><th>${nameHeader}</th><th>Effect</th><th>${valueHeader}</th></tr></thead><tbody>${rows}</tbody></table>`;
   }
 
   function buildImageLegend(containerId, names, colors, imgFn) {
@@ -584,11 +682,25 @@
       });
     }
 
-    // 2. Integrity curve
+    // 2. Integrity curve (include wave 30 for victories)
     if (waveNums.length > 0) {
+      const integrityWaves = [...waveNums];
+      const integrityData = waveNums.map(w => waveIntegrity[w] / waveCounts[w]);
+      if (victories.length > 0 && !integrityWaves.includes(victoryWave)) {
+        // Add wave 30 using the last wave's integrity from victorious sessions
+        let vicIntegrity = 0, vicCount = 0;
+        for (const s of victories) {
+          const sWaves = waves.filter(w => w.session_id === s.session_id).sort((a, b) => b.wave - a.wave);
+          if (sWaves.length > 0) { vicIntegrity += sWaves[0].integrity_remaining; vicCount++; }
+        }
+        if (vicCount > 0) {
+          integrityWaves.push(victoryWave);
+          integrityData.push(vicIntegrity / vicCount);
+        }
+      }
       charts.integrity = new Chart(document.getElementById('chart-integrity'), {
         type: 'line',
-        data: { labels: waveNums, datasets: [{ label: 'Avg Integrity', data: waveNums.map(w => waveIntegrity[w] / waveCounts[w]), borderColor: COLORS.green, backgroundColor: COLORS.green + '33', fill: true, tension: 0.3 }] },
+        data: { labels: integrityWaves, datasets: [{ label: 'Avg Integrity', data: integrityData, borderColor: COLORS.green, backgroundColor: COLORS.green + '33', fill: true, tension: 0.3 }] },
         options: { plugins: { legend: { display: false } }, scales: { x: { title: { display: true, text: 'Wave' } }, y: { title: { display: true, text: 'Integrity' }, beginAtZero: true } } }
       });
       document.getElementById('legend-integrity').innerHTML = `<div class="zbg-legend-item"><span class="zbg-legend-color" style="background:${COLORS.green}"></span><img src="${INTEGRITY_IMG}" alt="Integrity" title="Integrity"><span>Avg Integrity</span></div>`;
@@ -660,7 +772,7 @@
     for (const w of waves) if (w.chosen_bonus_id) bonusPicks[w.chosen_bonus_id] = (bonusPicks[w.chosen_bonus_id] || 0) + 1;
     const bonusEntries = Object.entries(bonusPicks).map(([k, v]) => [k, (v / numSessions) * 100]).sort((a, b) => b[1] - a[1]);
     if (bonusEntries.length > 0) {
-      buildPickTable('table-bonus', bonusEntries, 'Bonus', 'Pick Rate %');
+      buildPickTable('table-bonus', bonusEntries, 'Bonus', 'Pick Rate %', BONUS_EFFECTS);
     }
 
     // 6. Economy per wave
@@ -706,15 +818,16 @@
         return {
           label: name,
           data: waveNums.map(w => (avgPerWave[w] || 0) / (waveCounts[w] || 1)),
-          backgroundColor: tColors[i] + '99',
           borderColor: tColors[i],
-          fill: true,
+          backgroundColor: 'transparent',
+          fill: false,
+          tension: 0.3,
         };
       });
       charts.turrets = new Chart(document.getElementById('chart-turrets'), {
         type: 'line',
         data: { labels: waveNums, datasets: tDatasets },
-        options: { plugins: { legend: { display: false }, filler: { propagate: true } }, scales: { x: { title: { display: true, text: 'Wave' } }, y: { title: { display: true, text: 'Avg Turrets Placed' }, beginAtZero: true } } }
+        options: { plugins: { legend: { display: false } }, scales: { x: { title: { display: true, text: 'Wave' } }, y: { title: { display: true, text: 'Avg Turrets Placed' }, beginAtZero: true } } }
       });
       buildImageLegend('legend-turrets', tNames, tColors, TURRET_IMG);
     }
@@ -724,7 +837,7 @@
     for (const w of waves) if (w.chosen_malus_id) malusPicks[w.chosen_malus_id] = (malusPicks[w.chosen_malus_id] || 0) + 1;
     const malusEntries = Object.entries(malusPicks).map(([k, v]) => [k, (v / numSessions) * 100]).sort((a, b) => b[1] - a[1]);
     if (malusEntries.length > 0) {
-      buildPickTable('table-malus', malusEntries, 'Malus', 'Pick Rate %');
+      buildPickTable('table-malus', malusEntries, 'Malus', 'Pick Rate %', MALUS_EFFECTS, MALUS_PATTERNS);
     }
   }
 
