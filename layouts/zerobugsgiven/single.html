@@ -323,6 +323,14 @@
   const ENEMY_IMG = name => `${BASE}/zerobugsgiven/img/enemies/${name}.png`;
   const TURRET_IMG = name => `${BASE}/zerobugsgiven/img/turrets/${name}.png`;
   const INTEGRITY_IMG = `${BASE}/zerobugsgiven/img/integrity.png`;
+  const STAT_IMGS = {
+    'physical': `${BASE}/zerobugsgiven/img/physical.png`,
+    'special': `${BASE}/zerobugsgiven/img/special.png`,
+    'junkbytes': `${BASE}/zerobugsgiven/img/junkbytes.png`,
+    'health': `${BASE}/zerobugsgiven/img/health.png`,
+    'shield': `${BASE}/zerobugsgiven/img/ShiledIcon.png`,
+    'integrity': `${BASE}/zerobugsgiven/img/integrity.png`,
+  };
 
   const COLORS = {
     red: '#e74c3c', green: '#2ecc71', orange: '#e67e22', blue: '#3498db',
@@ -361,6 +369,7 @@
   ENEMY_TYPES.forEach(n => preloadImg(ENEMY_IMG(n)));
   TURRET_TYPES.forEach(n => preloadImg(TURRET_IMG(n)));
   preloadImg(INTEGRITY_IMG);
+  Object.values(STAT_IMGS).forEach(preloadImg);
 
   function isEnemy(name) { return ENEMY_TYPES.includes(name); }
   function isTurret(name) { return TURRET_TYPES.includes(name); }
@@ -487,7 +496,7 @@
     'Lethal Instinct': 'Turrets gain crit chance per level',
     'Focused Experience': 'Laser turrets ramp up faster per level',
     // Economy
-    'Advanced Distillation': 'BytesBoiler gains junkbytes production/s',
+    'Advanced Distillation': 'Bytesboiler gains junkbytes production/s',
     'Bulk Discount': 'All turrets cost less junkbytes',
     // Specific turret
     'Shooter Cadence': 'Shooter turrets gain fire rate',
@@ -508,7 +517,7 @@
     'Vortex': 'Fanblade turrets slow enemies on hit',
     'Lacerate': 'Fanblade hits apply bleed',
     'Concussive Blast': 'Mortar impacts slow enemies',
-    'Junk Magnet': 'BytesBoiler nearby deaths drop +50% junkbytes',
+    'Junk Magnet': 'Bytesboiler nearby deaths drop +50% junkbytes',
     'Piercing Rounds': 'Shooter bullets pierce to next enemy',
     'Chain Overload': 'Electro final charge explodes nearby',
     'Electro Link': 'Nearby Electro turrets form a damaging arc',
@@ -519,20 +528,20 @@
     'Searing Wounds': 'Flamethrower x2 damage to enemies below 50% HP',
     'Meltdown': 'Flamethrower fire bypasses barrier',
     'Seismic Tremor': 'Mortar reduces physical resist on impact',
-    'Recycler': 'BytesBoiler converts overkill to junkbytes',
-    'Overclock': 'BytesBoiler +10% production per enemy in range',
-    'Electrified Blades': 'Electro charges Fanblade hits',
-    'Steam Blast': 'Flame on boiler triggers steam AoE',
-    'Emergency Protocol': 'BytesBoiler x2 production when integrity ≤30%',
-    'Barricade': 'Enemies slowed near integrity goals',
-    'Guardian Backup': 'Survive a lethal hit once with 1 integrity',
+    'Recycler': 'Bytesboiler converts overkill to junkbytes',
+    'Overclock': 'Bytesboiler +10% production per enemy in range',
+    'Electrified Blades': 'Electro turrets electrify nearby Fanblade blades, applying electro charges on hit',
+    'Steam Blast': 'Flamethrower flame cone on Bytesboiler triggers steam AoE (damage + slow)',
+    'Emergency Protocol': 'Bytesboiler x2 production when integrity ≤30%',
+    'Barricade': 'Enemies slowed 20% on cells adjacent to integrity goals',
+    'Guardian Backup': 'Survive a lethal hit once per game with 1 integrity',
     // Outpost
     'Signal Intelligence': 'Outpost conquest costs reduced',
     'Asset Seizure': 'Conquering an outpost grants junkbytes',
     // Synergies
     'Arsenal Mastery': 'All turrets gain +25% physical damage',
     'Arcane Surge': 'All turrets gain +25% special damage',
-    'Inferno': 'Burn damage +150%',
+    'Inferno': 'Flamethrower burn damage +150%',
     'Tesla Field': 'Electro gain +5 damage and +2 chain bounces',
     'Market Crash': 'All turrets cost -40 junkbytes',
     'Lockdown': 'All turrets gain +1.5 range',
@@ -658,12 +667,30 @@
 
   const ICON_SIZE = 'width:28px;height:28px;vertical-align:middle;margin:0 2px';
   function inlineImg(src, alt) { return `<img src="${src}" alt="${alt}" title="${alt}" style="${ICON_SIZE}">`; }
+  const STAT_KEYWORDS = [
+    [/\bphysical damage\b/gi, 'physical', 'Physical Damage'],
+    [/\bphysical resist\b/gi, 'physical', 'Physical Resist'],
+    [/\bphysical\b/gi, 'physical', 'Physical'],
+    [/\bspecial damage\b/gi, 'special', 'Special Damage'],
+    [/\bspecial resistance\b/gi, 'special', 'Special Resistance'],
+    [/\bspecial\b/gi, 'special', 'Special'],
+    [/\bjunkbytes\b/gi, 'junkbytes', 'Junkbytes'],
+    [/\bintegrity\b/gi, 'integrity', 'Integrity'],
+    [/\bhealth\b/gi, 'health', 'Health'],
+    [/\bshield\b/gi, 'shield', 'Shield'],
+    [/\bbarrier\b/gi, 'shield', 'Barrier'],
+  ];
+
   function injectIcons(text) {
+    // Stat icons first (longer matches before shorter)
+    for (const [re, statKey, label] of STAT_KEYWORDS)
+      text = text.replace(re, inlineImg(STAT_IMGS[statKey], label));
+    // Turret icons
     for (const t of TURRET_TYPES) text = text.replace(new RegExp(`\\b${t}\\b`, 'g'), inlineImg(TURRET_IMG(t), t));
-    for (const e of ENEMY_TYPES) text = text.replace(new RegExp(`\\b${e}\\b`, 'g'), inlineImg(ENEMY_IMG(e), e));
-    // Short names
     for (const [short, full] of Object.entries(TURRET_ALIAS))
       text = text.replace(new RegExp(`\\b${short}\\b`, 'g'), inlineImg(TURRET_IMG(full), full));
+    // Enemy icons
+    for (const e of ENEMY_TYPES) text = text.replace(new RegExp(`\\b${e}\\b`, 'g'), inlineImg(ENEMY_IMG(e), e));
     return text;
   }
 
