@@ -262,13 +262,8 @@
     </div>
 
     <div class="zbg-chart-section">
-      <h2>3a. Avg Leaks by Enemy Type</h2>
-      <div class="zbg-chart-wrap"><canvas id="chart-leak-count"></canvas></div>
-    </div>
-
-    <div class="zbg-chart-section">
-      <h2>3b. Avg Integrity Damage by Enemy Type</h2>
-      <div class="zbg-chart-wrap"><canvas id="chart-leak-integrity"></canvas></div>
+      <h2>3. Leaks by Enemy Type</h2>
+      <div class="zbg-chart-wrap"><canvas id="chart-leaks"></canvas></div>
     </div>
 
     <div class="zbg-chart-section">
@@ -534,6 +529,14 @@
     // Outpost
     'Signal Intelligence': 'Outpost conquest costs reduced',
     'Asset Seizure': 'Conquering an outpost grants junkbytes',
+    // Synergies
+    'Arsenal Mastery': 'All turrets gain +25% physical damage',
+    'Arcane Surge': 'All turrets gain +25% special damage',
+    'Inferno': 'Burn damage +150%',
+    'Tesla Field': 'Electro gain +5 damage and +2 chain bounces',
+    'Market Crash': 'All turrets cost -40 junkbytes',
+    'Lockdown': 'All turrets gain +1.5 range',
+    'Fortified': 'All goals gain +15 integrity',
   };
 
   const BONUS_PATTERNS = [
@@ -579,6 +582,10 @@
     // Outpost
     'Fortified Position': 'Outpost conquest costs more',
     'Rapid Escalation': 'Unconquered outposts escalate threat faster',
+    // Synergies
+    'Apex Predators': 'All enemies gain +5 health regen/sec',
+    'Impenetrable': 'All enemies gain +15% physical and special resistance',
+    'Total Decay': 'Corrupted cells spread much faster',
   };
 
   const MALUS_PATTERNS = [
@@ -595,22 +602,24 @@
   ];
 
   function getEffect(name, map, patterns) {
-    if (map[name]) return map[name];
+    if (map[name]) return { text: map[name], icon: null };
     if (patterns) {
       for (const [re, tpl] of patterns) {
         const m = name.match(re);
-        if (m) return tpl.replace('{0}', m[1]);
+        if (m) return { text: tpl.replace('{0}', m[1]), icon: m[1] };
       }
     }
-    return '';
+    return { text: '', icon: null };
   }
 
-  function buildPickTable(containerId, entries, nameHeader, valueHeader, effectMap, effectPatterns) {
+  function buildPickTable(containerId, entries, nameHeader, valueHeader, effectMap, effectPatterns, iconType) {
     const el = document.getElementById(containerId);
     if (!el) return;
+    const imgFn = iconType === 'turret' ? TURRET_IMG : ENEMY_IMG;
     const rows = entries.map(([name, val]) => {
-      const effect = getEffect(name, effectMap || {}, effectPatterns);
-      return `<tr><td>${name}</td><td>${effect}</td><td>${val.toFixed(1)}%</td></tr>`;
+      const { text, icon } = getEffect(name, effectMap || {}, effectPatterns);
+      const iconHtml = icon ? `<img src="${imgFn(icon)}" alt="${icon}" title="${icon}" style="width:24px;height:24px;vertical-align:middle;margin-right:4px;">` : '';
+      return `<tr><td>${name}</td><td>${iconHtml}${text}</td><td>${val.toFixed(1)}%</td></tr>`;
     }).join('');
     el.innerHTML = `<table class="zbg-pick-table"><thead><tr><th>${nameHeader}</th><th>Effect</th><th>${valueHeader}</th></tr></thead><tbody>${rows}</tbody></table>`;
   }
@@ -660,7 +669,7 @@
       if (el) el.innerHTML = '';
     });
 
-    const chartCanvases = ['chart-death','chart-integrity','chart-leak-count','chart-leak-integrity','chart-dps','chart-economy','chart-turrets'];
+    const chartCanvases = ['chart-death','chart-integrity','chart-leaks','chart-dps','chart-economy','chart-turrets'];
     // Clear all canvases so stale frames don't persist
     chartCanvases.forEach(id => {
       const cv = document.getElementById(id);
@@ -749,30 +758,32 @@
       document.getElementById('legend-integrity').innerHTML = `<div class="zbg-legend-item"><span class="zbg-legend-color" style="background:${COLORS.green}"></span><img src="${INTEGRITY_IMG}" alt="Integrity" title="Integrity"><span>Avg Integrity</span></div>`;
     }
 
-    // 3a. Leak count by enemy (avg per session)
+    // 3. Leaks by enemy type (avg per session): count + integrity damage
     const numSessions = sessions.length || 1;
-    const leakCount = {};
-    for (const w of waves) for (const p of (w.leaked || [])) leakCount[p.key] = (leakCount[p.key] || 0) + p.value;
-    const leakEntries = Object.entries(leakCount).filter(([, v]) => v > 0).map(([k, v]) => [k, v / numSessions]).sort((a, b) => a[1] - b[1]);
-    if (leakEntries.length > 0) {
-      setCanvasHeight('chart-leak-count', leakEntries.length);
-      charts.leakCount = new Chart(document.getElementById('chart-leak-count'), {
-        type: 'bar',
-        data: { labels: leakEntries.map(e => e[0]), datasets: [{ label: 'Avg Leaks', data: leakEntries.map(e => e[1]), backgroundColor: COLORS.orange + 'cc', borderColor: COLORS.orange, borderWidth: 1 }] },
-        options: hBarOpts('Avg Leaks per Session', 'enemy', leakEntries.length)
-      });
+    const leakCount = {}, leakInteg = {};
+    for (const w of waves) {
+      for (const p of (w.leaked || [])) leakCount[p.key] = (leakCount[p.key] || 0) + p.value;
+      for (const p of (w.leaked_integrity || [])) leakInteg[p.key] = (leakInteg[p.key] || 0) + p.value;
     }
-
-    // 3b. Integrity damage by enemy (avg per session)
-    const leakInteg = {};
-    for (const w of waves) for (const p of (w.leaked_integrity || [])) leakInteg[p.key] = (leakInteg[p.key] || 0) + p.value;
-    const integEntries = Object.entries(leakInteg).filter(([, v]) => v > 0).map(([k, v]) => [k, v / numSessions]).sort((a, b) => a[1] - b[1]);
-    if (integEntries.length > 0) {
-      setCanvasHeight('chart-leak-integrity', integEntries.length);
-      charts.leakInteg = new Chart(document.getElementById('chart-leak-integrity'), {
+    const allLeakEnemies = [...new Set([...Object.keys(leakCount), ...Object.keys(leakInteg)])];
+    const leakEntries = allLeakEnemies
+      .map(k => [k, (leakCount[k] || 0) / numSessions, (leakInteg[k] || 0) / numSessions])
+      .filter(([, c, i]) => c > 0 || i > 0)
+      .sort((a, b) => a[2] - b[2]);
+    if (leakEntries.length > 0) {
+      setCanvasHeight('chart-leaks', leakEntries.length);
+      const leakOpts = hBarOpts('Value per Session', 'enemy', leakEntries.length);
+      leakOpts.plugins.legend = { display: true };
+      charts.leaks = new Chart(document.getElementById('chart-leaks'), {
         type: 'bar',
-        data: { labels: integEntries.map(e => e[0]), datasets: [{ label: 'Avg Integrity Removed', data: integEntries.map(e => e[1]), backgroundColor: COLORS.darkRed + 'cc', borderColor: COLORS.darkRed, borderWidth: 1 }] },
-        options: hBarOpts('Avg Integrity Removed per Session', 'enemy', integEntries.length)
+        data: {
+          labels: leakEntries.map(e => e[0]),
+          datasets: [
+            { label: 'Avg Leaks', data: leakEntries.map(e => e[1]), backgroundColor: COLORS.orange + 'cc', borderColor: COLORS.orange, borderWidth: 1 },
+            { label: 'Avg Integrity Removed', data: leakEntries.map(e => e[2]), backgroundColor: COLORS.darkRed + 'cc', borderColor: COLORS.darkRed, borderWidth: 1 },
+          ]
+        },
+        options: leakOpts
       });
     }
 
@@ -815,7 +826,7 @@
     for (const w of waves) if (w.chosen_bonus_id) bonusPicks[w.chosen_bonus_id] = (bonusPicks[w.chosen_bonus_id] || 0) + 1;
     const bonusEntries = Object.entries(bonusPicks).map(([k, v]) => [k, (v / numSessions) * 100]).sort((a, b) => b[1] - a[1]);
     if (bonusEntries.length > 0) {
-      buildPickTable('table-bonus', bonusEntries, 'Bonus', 'Pick Rate %', BONUS_EFFECTS, BONUS_PATTERNS);
+      buildPickTable('table-bonus', bonusEntries, 'Bonus', 'Pick Rate %', BONUS_EFFECTS, BONUS_PATTERNS, 'turret');
     }
 
     // 6. Economy per wave
@@ -880,7 +891,7 @@
     for (const w of waves) if (w.chosen_malus_id) malusPicks[w.chosen_malus_id] = (malusPicks[w.chosen_malus_id] || 0) + 1;
     const malusEntries = Object.entries(malusPicks).map(([k, v]) => [k, (v / numSessions) * 100]).sort((a, b) => b[1] - a[1]);
     if (malusEntries.length > 0) {
-      buildPickTable('table-malus', malusEntries, 'Malus', 'Pick Rate %', MALUS_EFFECTS, MALUS_PATTERNS);
+      buildPickTable('table-malus', malusEntries, 'Malus', 'Pick Rate %', MALUS_EFFECTS, MALUS_PATTERNS, 'enemy');
     }
   }
 
