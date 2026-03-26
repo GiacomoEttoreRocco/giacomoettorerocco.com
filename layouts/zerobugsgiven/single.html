@@ -262,7 +262,7 @@
     </div>
 
     <div class="zbg-chart-section">
-      <h2>3. Leaks by Enemy Type</h2>
+      <h2>3. Avg Leaks by Enemy Type</h2>
       <div class="zbg-chart-wrap"><canvas id="chart-leaks"></canvas></div>
     </div>
 
@@ -758,32 +758,17 @@
       document.getElementById('legend-integrity').innerHTML = `<div class="zbg-legend-item"><span class="zbg-legend-color" style="background:${COLORS.green}"></span><img src="${INTEGRITY_IMG}" alt="Integrity" title="Integrity"><span>Avg Integrity</span></div>`;
     }
 
-    // 3. Leaks by enemy type (avg per session): count + integrity damage
+    // 3. Leaks by enemy type (avg per session)
     const numSessions = sessions.length || 1;
-    const leakCount = {}, leakInteg = {};
-    for (const w of waves) {
-      for (const p of (w.leaked || [])) leakCount[p.key] = (leakCount[p.key] || 0) + p.value;
-      for (const p of (w.leaked_integrity || [])) leakInteg[p.key] = (leakInteg[p.key] || 0) + p.value;
-    }
-    const allLeakEnemies = [...new Set([...Object.keys(leakCount), ...Object.keys(leakInteg)])];
-    const leakEntries = allLeakEnemies
-      .map(k => [k, (leakCount[k] || 0) / numSessions, (leakInteg[k] || 0) / numSessions])
-      .filter(([, c, i]) => c > 0 || i > 0)
-      .sort((a, b) => a[2] - b[2]);
+    const leakCount = {};
+    for (const w of waves) for (const p of (w.leaked || [])) leakCount[p.key] = (leakCount[p.key] || 0) + p.value;
+    const leakEntries = Object.entries(leakCount).filter(([, v]) => v > 0).map(([k, v]) => [k, v / numSessions]).sort((a, b) => a[1] - b[1]);
     if (leakEntries.length > 0) {
       setCanvasHeight('chart-leaks', leakEntries.length);
-      const leakOpts = hBarOpts('Value per Session', 'enemy', leakEntries.length);
-      leakOpts.plugins.legend = { display: true };
       charts.leaks = new Chart(document.getElementById('chart-leaks'), {
         type: 'bar',
-        data: {
-          labels: leakEntries.map(e => e[0]),
-          datasets: [
-            { label: 'Avg Leaks', data: leakEntries.map(e => e[1]), backgroundColor: COLORS.orange + 'cc', borderColor: COLORS.orange, borderWidth: 1 },
-            { label: 'Avg Integrity Removed', data: leakEntries.map(e => e[2]), backgroundColor: COLORS.darkRed + 'cc', borderColor: COLORS.darkRed, borderWidth: 1 },
-          ]
-        },
-        options: leakOpts
+        data: { labels: leakEntries.map(e => e[0]), datasets: [{ label: 'Avg Leaks', data: leakEntries.map(e => e[1]), backgroundColor: COLORS.orange + 'cc', borderColor: COLORS.orange, borderWidth: 1 }] },
+        options: hBarOpts('Avg Leaks per Session', 'enemy', leakEntries.length)
       });
     }
 
