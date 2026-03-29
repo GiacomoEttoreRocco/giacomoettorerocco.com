@@ -246,7 +246,6 @@
       <div class="zbg-card"><span class="zbg-value" id="zbg-avgdeath">-</span><span class="zbg-label">Avg Death Wave</span></div>
       <div class="zbg-card"><span class="zbg-value" id="zbg-avgduration">-</span><span class="zbg-label">Avg Duration</span></div>
       <div class="zbg-card"><span class="zbg-value" id="zbg-leakrate">-</span><span class="zbg-label">Leak Rate</span></div>
-      <div class="zbg-card"><span class="zbg-value" id="zbg-skiprate">-</span><span class="zbg-label">Choice Skip Rate</span></div>
     </div>
 
     <!-- Charts -->
@@ -456,18 +455,15 @@
     document.getElementById('zbg-avgduration').textContent = n > 0
       ? (sessions.reduce((a, s) => a + s.total_duration, 0) / n / 60).toFixed(1) + 'm' : '-';
 
-    let totalSpawned = 0, totalLeaked = 0, skippedCount = 0, choiceCount = 0;
+    let totalSpawned = 0, totalLeaked = 0;
     for (const w of waves) {
       const sp = w.spawned || [];
       const lk = w.leaked || [];
       totalSpawned += sp.reduce((a, p) => a + p.value, 0);
       totalLeaked += lk.reduce((a, p) => a + p.value, 0);
-      if (w.chosen_bonus_id || w.skipped) { choiceCount++; if (w.skipped) skippedCount++; }
     }
     document.getElementById('zbg-leakrate').textContent = totalSpawned > 0
       ? (totalLeaked / totalSpawned * 100).toFixed(1) + '%' : '-';
-    document.getElementById('zbg-skiprate').textContent = choiceCount > 0
-      ? (skippedCount / choiceCount * 100).toFixed(1) + '%' : '-';
   }
 
   function destroyCharts() {
