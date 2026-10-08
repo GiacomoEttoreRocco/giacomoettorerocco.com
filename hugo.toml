@@ -38,13 +38,9 @@ enableRobotsTXT = true
     url = '/'
     weight = 1
   [[menu.main]]
-    name = 'Analytics'
-    url = '/zerobugsgiven/'
-    weight = 2
-  [[menu.main]]
     name = 'About'
     url = '/about/'
-    weight = 3
+    weight = 2
 
 [outputs]
   home = ["HTML", "RSS", "JSON"]

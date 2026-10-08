@@ -18,6 +18,5 @@ Zero Bugs Given is a roguelite tower defense game built in Unity. Defend your ou
 
 ## Links
 
-- [Analytics Dashboard](/zerobugsgiven/)
 - [Steam Page](https://store.steampowered.com/app/4443770/Zero_Bugs_Given/)
 - [Discord](https://discord.gg/vuCdDeYmCQ)
